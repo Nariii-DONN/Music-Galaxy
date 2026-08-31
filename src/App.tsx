@@ -1,16 +1,16 @@
+import './App.css'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+  OrbitControls,
+  Stars,
+  Float,
+  Sparkles,
+} from '@react-three/drei'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  AnimatePresence,
-  motion,
-} from 'framer-motion'
-import {
-  Album,
+  Activity,
+  Compass,
   Disc3,
   Heart,
   Home,
@@ -20,48 +20,229 @@ import {
   Pause,
   Play,
   Plus,
+  Radio,
   Search,
-  Shuffle,
+  Settings,
+  Share2,
   SkipBack,
   SkipForward,
-  Sparkles,
-  Upload,
-  User,
+  SlidersHorizontal,
+  Sparkles as SparkleIcon,
   Volume2,
   VolumeX,
   X,
-  LogOut,
+  Upload,
   Globe2,
-  Music2,
+  UserRound,
+  ChevronDown,
+  Maximize2,
+  Shuffle,
+  Repeat2,
+  MoreHorizontal,
 } from 'lucide-react'
+import * as THREE from 'three'
 
-
-import { useAuth } from './lib/AuthContext'
+import type { Track } from './lib/types'
 import {
-  aiDj,
-  getStreamUrl,
   searchAll,
   trendingAll,
 } from './lib/music'
-
-import type { Track } from './lib/types'
+import { audioEngine } from './lib/audioEngine'
 import { importLocalAudio } from './providers/local'
 
-type View =
-  | 'home'
-  | 'discover'
-  | 'library'
-  | 'ai-dj'
+const demoTrack: Track = {
+  id: 'demo',
+  provider: 'demo',
+  providerId: 'demo',
+  title: 'MusicGalaxy',
+  artist: 'Your Universe',
+  album: 'Explore',
+  genre: 'Galaxy',
+  mood: 'Dream',
+  color: '#7c3aed',
+  duration: 0,
+  durationLabel: '0:00',
+}
 
-function formatTime(seconds: number) {
-  if (!Number.isFinite(seconds) || seconds <= 0) {
-    return '0:00'
-  }
+const nav = [
+  ['Galaxy', Home],
+  ['Explore', Compass],
+  ['Library', Library],
+  ['Playlists', ListMusic],
+] as const
 
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
+function CameraRig({ pulse }: { pulse: number }) {
+  const { camera } = useThree()
 
-  return `${mins}:${String(secs).padStart(2, '0')}`
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime()
+
+    camera.position.x +=
+      (Math.sin(t * 0.08) * 0.7 - camera.position.x) * 0.006
+
+    camera.position.y +=
+      (Math.cos(t * 0.07) * 0.4 + 1.5 - camera.position.y) *
+      0.006
+
+    camera.lookAt(0, 0, 0)
+
+    if (pulse > 0) {
+      camera.position.z =
+        12 + Math.sin(t * 18) * pulse * 0.15
+    }
+  })
+
+  return null
+}
+
+function Galaxy({
+  tracks,
+  active,
+  pulse,
+  onSelect,
+}: {
+  tracks: Track[]
+  active: Track
+  pulse: number
+  onSelect: (track: Track) => void
+}) {
+  const group = useRef<THREE.Group>(null)
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime()
+
+    if (group.current) {
+      group.current.rotation.y = t * 0.025
+    }
+  })
+
+  const positions = useMemo(
+    () =>
+      tracks.map((_, i) => {
+        const a =
+          (i / Math.max(tracks.length, 1)) *
+          Math.PI *
+          2
+
+        const r = 2.2 + (i % 3) * 0.8
+
+        return [
+          Math.cos(a) * r,
+          Math.sin(a * 2) * 0.65,
+          Math.sin(a) * r,
+        ] as [number, number, number]
+      }),
+    [tracks],
+  )
+
+  return (
+    <>
+      <ambientLight intensity={0.35} />
+
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={20}
+        distance={20}
+        color={active.color}
+      />
+
+      <Stars
+        radius={70}
+        depth={35}
+        count={2600}
+        factor={2.4}
+        saturation={0}
+        fade
+        speed={0.35}
+      />
+
+      <Sparkles
+        count={900}
+        scale={[18, 10, 18]}
+        size={1.6}
+        speed={0.25}
+        opacity={0.55}
+        color={active.color}
+      />
+
+      <group ref={group}>
+        <mesh>
+          <sphereGeometry args={[0.65, 48, 48]} />
+
+          <meshStandardMaterial
+            emissive={active.color}
+            emissiveIntensity={4}
+            color="#080812"
+            roughness={0.2}
+          />
+        </mesh>
+
+        {tracks.map((track, i) => (
+          <Float
+            key={track.id}
+            speed={1.1 + i * 0.04}
+            rotationIntensity={0.12}
+            floatIntensity={0.35}
+          >
+            <mesh
+              position={positions[i]}
+              onClick={() => onSelect(track)}
+            >
+              <sphereGeometry
+                args={[
+                  track.id === active.id
+                    ? 0.46
+                    : 0.31 + (i % 2) * 0.07,
+                  28,
+                  28,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={track.color}
+                emissive={track.color}
+                emissiveIntensity={
+                  track.id === active.id ? 3.5 : 1.6
+                }
+                metalness={0.2}
+                roughness={0.35}
+              />
+            </mesh>
+          </Float>
+        ))}
+
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[2.1, 2.13, 128]} />
+
+          <meshBasicMaterial
+            color={active.color}
+            transparent
+            opacity={0.22}
+          />
+        </mesh>
+
+        <mesh rotation={[Math.PI / 2, 0.3, 0]}>
+          <ringGeometry args={[3.0, 3.018, 128]} />
+
+          <meshBasicMaterial
+            color="#ffffff"
+            transparent
+            opacity={0.08}
+          />
+        </mesh>
+      </group>
+
+      <CameraRig pulse={pulse} />
+
+      <OrbitControls
+        enablePan={false}
+        minDistance={7}
+        maxDistance={18}
+        autoRotate
+        autoRotateSpeed={0.12}
+      />
+    </>
+  )
 }
 
 function Visualizer({
@@ -71,1472 +252,1276 @@ function Visualizer({
   playing: boolean
   color: string
 }) {
+  const bars = Array.from({ length: 42 })
+
   return (
-    <div
-      className={`visualizer ${playing ? 'is-playing' : ''}`}
-      style={
-        {
-          '--viz-color': color,
-        } as React.CSSProperties
-      }
-    >
-      {[1, 2, 3, 4, 5, 6, 7].map((bar) => (
-        <span key={bar} />
+    <div className="visualizer" aria-hidden>
+      {bars.map((_, i) => (
+        <span
+          key={i}
+          style={
+            {
+              '--i': i,
+              '--c': color,
+            } as React.CSSProperties
+          }
+          className={
+            playing ? 'bar active' : 'bar'
+          }
+        />
       ))}
     </div>
   )
 }
 
-function Cover({
-  track,
-  size = 'medium',
-}: {
-  track: Track
-  size?: 'small' | 'medium' | 'large'
-}) {
-  return (
-    <div
-      className={`track-cover ${size}`}
-      style={{
-        background: track.artworkUrl
-          ? undefined
-          : `radial-gradient(circle at 30% 20%, ${track.color}, #090914 70%)`,
-      }}
-    >
-      {track.artworkUrl ? (
-        <img
-          src={track.artworkUrl}
-          alt=""
-          loading="lazy"
-        />
-      ) : (
-        <Disc3 size={size === 'large' ? 54 : 28} />
-      )}
-    </div>
-  )
-}
-
-function App() {
-  const { user, loading: authLoading, signOut } = useAuth()
-
-  const [view, setView] = useState<View>('home')
+export default function App() {
   const [tracks, setTracks] = useState<Track[]>([])
-  const [searchResults, setSearchResults] = useState<Track[]>([])
-  const [query, setQuery] = useState('')
+  const [tab, setTab] =
+    useState('Galaxy')
 
-  const [active, setActive] = useState<Track | null>(null)
-  const [playing, setPlaying] = useState(false)
-  const [loadingTrack, setLoadingTrack] = useState(false)
+  const [query, setQuery] =
+    useState('')
 
-  const [liked, setLiked] = useState<string[]>([])
-  const [volume, setVolume] = useState(0.8)
-  const [muted, setMuted] = useState(false)
+  const [liked, setLiked] =
+    useState(false)
 
-  const [showPlayer, setShowPlayer] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
+  const [menu, setMenu] =
+    useState(false)
 
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
+  const [showPlayer, setShowPlayer] =
+    useState(false)
 
-  const [aiQueue, setAiQueue] = useState<Track[]>([])
-  const [localTracks, setLocalTracks] = useState<Track[]>([])
+  const [pulse, setPulse] =
+    useState(0)
 
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [loading, setLoading] =
+    useState(false)
 
-  /*
-   * ------------------------------------------------------------
-   * LOAD MUSIC
-   * ------------------------------------------------------------
-   */
+  const [message, setMessage] =
+    useState('')
 
-  const loadMusic = useCallback(async () => {
-    try {
-      const result = await trendingAll()
+  const [audioState, setAudioState] =
+    useState(() => audioEngine.getState())
 
-      setTracks(result)
+  const active =
+    audioState.track ?? demoTrack
 
-      if (result.length > 0) {
-        setActive((current) => current ?? result[0])
-      }
-    } catch (error) {
-      console.error('Unable to load music:', error)
-    }
+  const playing = audioState.playing
+  const currentTime = audioState.currentTime
+  const duration = audioState.duration
+  const volume = Math.round(audioState.volume * 100)
+  const muted = audioState.muted
+
+  useEffect(() => {
+    return audioEngine.subscribe(setAudioState)
   }, [])
 
   useEffect(() => {
-    void loadMusic()
-  }, [loadMusic])
+    audioEngine.setQueue(tracks)
+  }, [tracks])
 
   /*
-   * ------------------------------------------------------------
-   * SEARCH
-   * ------------------------------------------------------------
+   * Load real music from all configured providers.
    */
-
   useEffect(() => {
-    const value = query.trim()
+    let cancelled = false
 
-    if (!value) {
-      setSearchResults([])
+    async function loadTrending() {
+      setLoading(true)
+      setMessage('')
+
+      try {
+        const results = await trendingAll()
+
+        if (cancelled) return
+
+        if (results.length > 0) {
+          setTracks(results)
+          audioEngine.setTrack(results[0])
+        } else {
+          setTracks([])
+          audioEngine.setTrack(demoTrack)
+          setMessage(
+            'No music is currently available.',
+          )
+        }
+      } catch (error) {
+        console.error(
+          'Failed to load music:',
+          error,
+        )
+
+        if (!cancelled) {
+          setTracks([])
+          audioEngine.setTrack(demoTrack)
+          setMessage(
+            'Music providers are temporarily unavailable.',
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadTrending()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  /*
+   * Real provider search.
+   */
+  useEffect(() => {
+    const q = query.trim()
+
+    if (!q) {
       return
     }
 
-    const timer = window.setTimeout(async () => {
-      try {
-        const results = await searchAll(value)
-        setSearchResults(results)
-      } catch (error) {
-        console.error('Search failed:', error)
-        setSearchResults([])
-      }
-    }, 350)
+    let cancelled = false
 
-    return () => window.clearTimeout(timer)
+    const timer = window.setTimeout(
+      async () => {
+        setLoading(true)
+        setMessage('')
+
+        try {
+          const results = await searchAll(q)
+
+          if (cancelled) return
+
+          if (results.length > 0) {
+            setTracks(results)
+            audioEngine.setTrack(results[0])
+          } else {
+            setTracks([])
+            audioEngine.setTrack(demoTrack)
+            setMessage(
+              `No music found for "${q}".`,
+            )
+          }
+        } catch (error) {
+          console.error(
+            'Music provider search failed:',
+            error,
+          )
+
+          if (!cancelled) {
+            setTracks([])
+            audioEngine.setTrack(demoTrack)
+            setMessage(
+              'Music providers are temporarily unavailable.',
+            )
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false)
+          }
+        }
+      },
+      450,
+    )
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [query])
 
   /*
-   * ------------------------------------------------------------
-   * AUDIO
-   * ------------------------------------------------------------
+   * Galaxy pulse.
    */
-
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio()
-    }
-
-    const audio = audioRef.current
-
-    const onTimeUpdate = () => {
-      setCurrentTime(audio.currentTime || 0)
-    }
-
-    const onLoadedMetadata = () => {
-      setDuration(audio.duration || 0)
-    }
-
-    const onEnded = () => {
-      void nextTrack()
-    }
-
-    audio.addEventListener('timeupdate', onTimeUpdate)
-    audio.addEventListener('loadedmetadata', onLoadedMetadata)
-    audio.addEventListener('ended', onEnded)
-
-    return () => {
-      audio.removeEventListener('timeupdate', onTimeUpdate)
-      audio.removeEventListener(
-        'loadedmetadata',
-        onLoadedMetadata,
-      )
-      audio.removeEventListener('ended', onEnded)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!audioRef.current) return
-
-    audioRef.current.volume = muted ? 0 : volume
-  }, [volume, muted])
-
-  /*
-   * ------------------------------------------------------------
-   * PLAY TRACK
-   * ------------------------------------------------------------
-   */
-
-  const playTrack = useCallback(
-    async (track: Track) => {
-      try {
-        setLoadingTrack(true)
-
-        const url = await getStreamUrl(track)
-
-        if (!url) {
-          console.error(
-            `No stream available for ${track.title}`,
-          )
-          setLoadingTrack(false)
-          return
-        }
-
-        if (!audioRef.current) {
-          audioRef.current = new Audio()
-        }
-
-        const audio = audioRef.current
-
-        audio.pause()
-        audio.src = url
-        audio.volume = muted ? 0 : volume
-
-        setActive(track)
-
-        await audio.play()
-
-        setPlaying(true)
-        setCurrentTime(0)
-      } catch (error) {
-        console.error('Playback failed:', error)
-        setPlaying(false)
-      } finally {
-        setLoadingTrack(false)
-      }
-    },
-    [muted, volume],
-  )
-
-  const togglePlay = useCallback(async () => {
-    if (!active) return
-
-    if (!audioRef.current?.src) {
-      await playTrack(active)
-      return
-    }
-
-    if (playing) {
-      audioRef.current.pause()
-      setPlaying(false)
-    } else {
-      try {
-        await audioRef.current.play()
-        setPlaying(true)
-      } catch (error) {
-        console.error(error)
-      }
-    }
-  }, [active, playing, playTrack])
-
-  /*
-   * ------------------------------------------------------------
-   * QUEUE
-   * ------------------------------------------------------------
-   */
-
-  const currentQueue = useMemo(() => {
-    if (view === 'ai-dj' && aiQueue.length) {
-      return aiQueue
-    }
-
-    if (query.trim() && searchResults.length) {
-      return searchResults
-    }
-
-    return [...localTracks, ...tracks]
-  }, [
-    aiQueue,
-    localTracks,
-    query,
-    searchResults,
-    tracks,
-    view,
-  ])
-
-  const nextTrack = useCallback(async () => {
-    if (!active || currentQueue.length === 0) return
-
-    const index = currentQueue.findIndex(
-      (track) => track.id === active.id,
+    const timer = window.setInterval(
+      () =>
+        setPulse(
+          playing ? 0.7 : 0.05,
+        ),
+      220,
     )
 
-    const next =
-      currentQueue[(index + 1) % currentQueue.length]
-
-    if (next) {
-      await playTrack(next)
-    }
-  }, [active, currentQueue, playTrack])
-
-  const prevTrack = useCallback(async () => {
-    if (!active || currentQueue.length === 0) return
-
-    const index = currentQueue.findIndex(
-      (track) => track.id === active.id,
-    )
-
-    const previous =
-      currentQueue[
-        (index - 1 + currentQueue.length) %
-          currentQueue.length
-      ]
-
-    if (previous) {
-      await playTrack(previous)
-    }
-  }, [active, currentQueue, playTrack])
+    return () =>
+      clearInterval(timer)
+  }, [playing])
 
   /*
-   * ------------------------------------------------------------
-   * LIKE
-   * ------------------------------------------------------------
+   * Audio playback is owned entirely by AudioEngine.
+   * App only subscribes to its state and renders the UI.
    */
-
-  const toggleLike = (track: Track) => {
-    setLiked((current) =>
-      current.includes(track.id)
-        ? current.filter((id) => id !== track.id)
-        : [...current, track.id],
-    )
-  }
 
   /*
-   * ------------------------------------------------------------
-   * AI DJ
-   * ------------------------------------------------------------
+   * Import local music.
    */
-
-  const startAiDj = () => {
-    if (!active) return
-
-    const pool = [
-      ...tracks,
-      ...searchResults,
-      ...localTracks,
-    ]
-
-    const queue = aiDj(active, pool)
-
-    setAiQueue(queue)
-    setView('ai-dj')
-
-    if (queue.length > 0) {
-      void playTrack(queue[0])
-    }
-  }
-
-  /*
-   * ------------------------------------------------------------
-   * LOCAL MUSIC
-   * ------------------------------------------------------------
-   */
-
-  const handleImport = (
+  const handleLocalImport = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = Array.from(
-      event.target.files ?? [],
+      event.target.files || [],
     )
 
-    const imported = importLocalAudio(files)
+    if (!files.length) return
 
-    if (!imported.length) return
+    const localTracks =
+      importLocalAudio(files)
 
-    setLocalTracks((current) => [
-      ...current,
-      ...imported,
+    if (!localTracks.length) {
+      setMessage(
+        'No supported audio files were selected.',
+      )
+      return
+    }
+
+    setTracks((previous) => [
+      ...localTracks,
+      ...previous,
     ])
 
-    setView('library')
-
-    if (!active) {
-      setActive(imported[0])
-    }
+    audioEngine.setQueue([...localTracks, ...tracks])
+    audioEngine.setTrack(localTracks[0])
+    setMessage(
+      `${localTracks.length} local track${
+        localTracks.length === 1 ? '' : 's'
+      } imported.`,
+    )
 
     event.target.value = ''
   }
 
-  /*
-   * ------------------------------------------------------------
-   * SEEK
-   * ------------------------------------------------------------
-   */
+  const choose = async (track: Track) => {
+    setLiked(false)
+    setShowPlayer(false)
+    setMessage('')
+    await audioEngine.play(track)
+  }
 
-  const seek = (
-    event: React.ChangeEvent<HTMLInputElement>,
+  function next() {
+    void audioEngine.next()
+  }
+
+  function prev() {
+    void audioEngine.previous()
+  }
+
+  const formatTime = (
+    seconds: number,
   ) => {
-    const value = Number(event.target.value)
+    if (!Number.isFinite(seconds)) {
+      return '0:00'
+    }
 
-    if (!audioRef.current) return
+    const minutes =
+      Math.floor(seconds / 60)
 
-    audioRef.current.currentTime = value
-    setCurrentTime(value)
+    const secs =
+      Math.floor(seconds % 60)
+
+    return `${minutes}:${String(
+      secs,
+    ).padStart(2, '0')}`
   }
 
-  /*
-   * ------------------------------------------------------------
-   * AUTH
-   * ------------------------------------------------------------
-   */
+  const progress =
+    duration > 0
+      ? (currentTime / duration) * 100
+      : 0
 
-  if (authLoading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-orb">
-          <Sparkles />
-        </div>
-
-        <h2>Entering MusicGalaxy...</h2>
-
-        <p>
-          Preparing your musical universe
-        </p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="auth-required">
-        <Sparkles size={42} />
-        <h1>MusicGalaxy</h1>
-        <p>
-          Sign in to enter your musical universe.
-        </p>
-      </div>
-    )
-  }
-
-  /*
-   * ------------------------------------------------------------
-   * DATA
-   * ------------------------------------------------------------
-   */
-
-  const displayTracks =
-    view === 'library'
-      ? localTracks
-      : view === 'ai-dj'
-        ? aiQueue
-        : query.trim()
-          ? searchResults
-          : tracks
-
-  const pageTitle =
-    view === 'home'
-      ? 'Your musical universe'
-      : view === 'discover'
-        ? 'Discover new worlds'
-        : view === 'library'
-          ? 'Your library'
-          : 'AI DJ'
+  const filtered =
+    tracks
 
   return (
-    <div className="app-shell">
-      {/* BACKGROUND */}
-      <div className="space-background">
-        <div className="nebula nebula-one" />
-        <div className="nebula nebula-two" />
-        <div className="stars" />
-      </div>
+    <div className="app">
 
-      {/* MOBILE MENU */}
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-          >
-            <button
-              onClick={() => {
-                setView('home')
-                setShowMenu(false)
-              }}
-            >
-              <Home size={18} />
-              Home
-            </button>
-
-            <button
-              onClick={() => {
-                setView('discover')
-                setShowMenu(false)
-              }}
-            >
-              <Globe2 size={18} />
-              Discover
-            </button>
-
-            <button
-              onClick={() => {
-                setView('library')
-                setShowMenu(false)
-              }}
-            >
-              <Library size={18} />
-              Library
-            </button>
-
-            <button
-              onClick={() => {
-                setView('ai-dj')
-                setShowMenu(false)
-              }}
-            >
-              <Sparkles size={18} />
-              AI DJ
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* HEADER */}
-      <header className="topbar">
-        <button
-          className="mobile-menu-button"
-          onClick={() =>
-            setShowMenu((current) => !current)
-          }
-        >
-          <Menu size={21} />
-        </button>
-
-        <button
-          className="brand"
-          onClick={() => setView('home')}
-        >
-          <span className="brand-icon">
-            <Sparkles size={19} />
-          </span>
+      <aside
+        className={
+          menu
+            ? 'sidebar open'
+            : 'sidebar'
+        }
+      >
+        <div className="brand">
+          <div className="brand-orb">
+            <SparkleIcon size={18} />
+          </div>
 
           <span>
             Music<span>Galaxy</span>
           </span>
-        </button>
+        </div>
 
-        <nav className="desktop-nav">
-          <button
-            className={view === 'home' ? 'active' : ''}
-            onClick={() => setView('home')}
-          >
-            Home
-          </button>
+        <div className="profile-mini">
+          <div className="avatar">
+            N
+          </div>
 
-          <button
-            className={
-              view === 'discover' ? 'active' : ''
-            }
-            onClick={() => setView('discover')}
-          >
-            Discover
-          </button>
+          <div>
+            <b>Nariii</b>
+            <small>Explorer</small>
+          </div>
 
-          <button
-            className={
-              view === 'library' ? 'active' : ''
-            }
-            onClick={() => setView('library')}
-          >
-            Library
-          </button>
+          <ChevronDown size={14} />
+        </div>
 
-          <button
-            className={
-              view === 'ai-dj' ? 'active' : ''
-            }
-            onClick={() => setView('ai-dj')}
-          >
-            AI DJ
-          </button>
+        <nav>
+          {nav.map(
+            ([name, Icon]) => (
+              <button
+                className={
+                  tab === name
+                    ? 'nav-item active'
+                    : 'nav-item'
+                }
+                onClick={() => {
+                  setTab(name)
+                  setMenu(false)
+                }}
+                key={name}
+              >
+                <Icon size={18} />
+                <span>{name}</span>
+              </button>
+            ),
+          )}
         </nav>
 
-        <div className="top-actions">
-          <div className="search-box">
+        <div className="side-title">
+          DISCOVER
+        </div>
+
+        {[
+          'Trending',
+          'Night Drive',
+          'Focus',
+          'New Releases',
+        ].map((item) => (
+          <button
+            className="nav-item subtle"
+            key={item}
+            onClick={() => {
+              setQuery(
+                item === 'Trending'
+                  ? ''
+                  : item,
+              )
+              setTab('Explore')
+            }}
+          >
+            <Radio size={16} />
+            <span>{item}</span>
+          </button>
+        ))}
+
+        <div className="side-bottom">
+          <button className="nav-item subtle">
+            <Settings size={17} />
+            <span>Settings</span>
+          </button>
+
+          <button className="nav-item subtle">
+            <UserRound size={17} />
+            <span>Profile</span>
+          </button>
+        </div>
+      </aside>
+
+      <main className="main">
+        <header className="topbar">
+          <button
+            className="mobile-menu"
+            onClick={() =>
+              setMenu(!menu)
+            }
+          >
+            <Menu />
+          </button>
+
+          <div className="search">
             <Search size={17} />
 
             <input
               value={query}
               onChange={(event) =>
-                setQuery(event.target.value)
+                setQuery(
+                  event.target.value,
+                )
               }
-              placeholder="Search the galaxy..."
+              placeholder="Search songs, artists, albums..."
             />
 
             {query && (
               <button
-                onClick={() => setQuery('')}
-                className="clear-search"
+                onClick={() => {
+                  setQuery('')
+                  setMessage('')
+                }}
               >
                 <X size={15} />
               </button>
             )}
           </div>
 
-          <button
-            className="profile-button"
-            onClick={() =>
-              setShowProfile((current) => !current)
-            }
-          >
-            <User size={18} />
-          </button>
-        </div>
+          <div className="top-actions">
+            <button className="icon-btn">
+              <Globe2 size={18} />
+            </button>
 
-        <AnimatePresence>
-          {showProfile && (
-            <motion.div
-              className="profile-popover"
-              initial={{
-                opacity: 0,
-                y: -8,
-                scale: 0.97,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-              }}
-              exit={{
-                opacity: 0,
-                y: -8,
-                scale: 0.97,
-              }}
-            >
-              <div className="profile-avatar">
-                <User />
-              </div>
+            <label className="publish">
+              <Upload size={17} />
+              Import
+              <input
+                type="file"
+                accept="audio/*"
+                multiple
+                hidden
+                onChange={
+                  handleLocalImport
+                }
+              />
+            </label>
 
-              <strong>
-                {user.email}
-              </strong>
+            <button className="publish">
+              <Plus size={17} />
+              Publish
+            </button>
 
-              <span>
-                MusicGalaxy explorer
-              </span>
+            <div className="avatar">
+              N
+            </div>
+          </div>
+        </header>
 
+        <section className="hero">
+          <div className="hero-copy">
+            <div className="eyebrow">
+              <span className="live-dot" />
+              YOUR PERSONAL UNIVERSE
+            </div>
+
+            <h1>
+              Music should be
+              <br />
+              <em>experienced.</em>
+            </h1>
+
+            <p>
+              Explore your music as a
+              living galaxy. Fly between
+              artists, albums and songs —
+              every world moves with the
+              sound.
+            </p>
+
+            <div className="hero-actions">
               <button
-                onClick={() => void signOut()}
+                className="primary"
+                onClick={() =>
+                  void audioEngine.toggle()
+                }
               >
-                <LogOut size={16} />
-                Sign out
+                {playing ? (
+                  <Pause size={17} />
+                ) : (
+                  <Play size={17} />
+                )}
+
+                {playing
+                  ? 'Pause journey'
+                  : 'Enter your galaxy'}
               </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
 
-      {/* MAIN */}
-      <main className="main-content">
-        {/* HERO */}
-        {view === 'home' && !query && (
-          <motion.section
-            className="hero"
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="hero-copy">
-              <span className="eyebrow">
-                <Sparkles size={14} />
-                YOUR MUSIC UNIVERSE
-              </span>
+              <button className="ghost">
+                <Share2 size={16} />
+                Share galaxy
+              </button>
+            </div>
+          </div>
 
-              <h1>
-                Music lives
-                <br />
-                <span>between the stars.</span>
-              </h1>
-
-              <p>
-                Discover open music, create playlists,
-                import your own collection and let AI
-                DJ your next journey.
-              </p>
-
-              <div className="hero-actions">
-                <button
-                  className="primary-button"
-                  onClick={() =>
-                    setView('discover')
-                  }
-                >
-                  <Globe2 size={17} />
-                  Explore music
-                </button>
-
-                <button
-                  className="secondary-button"
-                  onClick={() =>
-                    document
-                      .getElementById(
-                        'music-upload',
-                      )
-                      ?.click()
-                  }
-                >
-                  <Upload size={17} />
-                  Import music
-                </button>
-              </div>
+          <div className="stats">
+            <div>
+              <b>{tracks.length}</b>
+              <span>SONGS</span>
             </div>
 
-            <motion.div
-              className="hero-orbit"
-              animate={{
-                rotate: 360,
-              }}
-              transition={{
-                duration: 35,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
-            >
-              <div className="orbit-ring ring-one" />
-              <div className="orbit-ring ring-two" />
-              <div className="orbit-ring ring-three" />
-
-              <div className="planet">
-                <Music2 size={45} />
-              </div>
-            </motion.div>
-          </motion.section>
-        )}
-
-        {/* SEARCH */}
-        {query && (
-          <section className="search-results-section">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow">
-                  SEARCH
-                </span>
-
-                <h1>
-                  Results for "{query}"
-                </h1>
-              </div>
-
-              <span>
-                {searchResults.length} tracks
-              </span>
+            <div>
+              <b>
+                {
+                  new Set(
+                    tracks.map(
+                      (track) =>
+                        track.artist,
+                    ),
+                  ).size
+                }
+              </b>
+              <span>ARTISTS</span>
             </div>
-          </section>
-        )}
 
-        {/* PAGE HEADER */}
-        {!query && (
+            <div>
+              <b>
+                {
+                  new Set(
+                    tracks.map(
+                      (track) =>
+                        track.genre,
+                    ),
+                  ).size
+                }
+              </b>
+              <span>GENRES</span>
+            </div>
+          </div>
+        </section>
+
+        {message && (
           <motion.div
-            className="page-heading"
+            className="provider-message"
             initial={{
               opacity: 0,
-              y: 15,
+              y: -8,
             }}
             animate={{
               opacity: 1,
               y: 0,
             }}
           >
-            <div>
-              <span className="eyebrow">
-                {view === 'ai-dj'
-                  ? 'INTELLIGENT MIX'
-                  : 'EXPLORE'}
-              </span>
-
-              <h2>{pageTitle}</h2>
-            </div>
-
-            <div className="heading-actions">
-              <label
-                className="icon-action"
-                title="Import local music"
-              >
-                <Upload size={17} />
-
-                <input
-                  id="music-upload"
-                  type="file"
-                  accept="audio/*"
-                  multiple
-                  hidden
-                  onChange={handleImport}
-                />
-              </label>
-
-              {active && (
-                <button
-                  className="ai-button"
-                  onClick={startAiDj}
-                >
-                  <Sparkles size={16} />
-                  AI DJ
-                </button>
-              )}
-            </div>
+            {message}
           </motion.div>
         )}
 
-        {/* AI DJ */}
-        {view === 'ai-dj' && !query && (
-          <motion.section
-            className="ai-panel"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div className="ai-icon">
-              <Sparkles />
-            </div>
-
+        <section className="galaxy-card">
+          <div className="galaxy-toolbar">
             <div>
-              <h3>
-                AI DJ is shaping your journey
-              </h3>
+              <b>YOUR GALAXY</b>
 
-              <p>
-                Matching genre, mood, tags and BPM
-                for a smoother transition between
-                tracks.
-              </p>
+              <span>
+                Drag to explore · click a
+                planet to play
+              </span>
             </div>
 
-            {active && (
-              <button
-                className="primary-button"
-                onClick={startAiDj}
-              >
-                Generate again
+            <div className="toolbar-actions">
+              <button>
+                <SlidersHorizontal
+                  size={16}
+                />
+                Visuals
               </button>
-            )}
-          </motion.section>
-        )}
 
-        {/* TRACK GRID */}
-        <section className="music-section">
-          <div className="section-title-row">
-            <h3>
-              {query
-                ? 'Search results'
-                : view === 'library'
-                  ? 'Local collection'
-                  : view === 'ai-dj'
-                    ? 'AI queue'
-                    : 'Trending across the galaxy'}
-            </h3>
-
-            <span>
-              {displayTracks.length}
-            </span>
+              <button>
+                <Maximize2 size={16} />
+              </button>
+            </div>
           </div>
 
-          {displayTracks.length === 0 ? (
-            <div className="empty-state">
-              <div>
-                <Disc3 size={42} />
+          <div className="canvas-wrap">
+            {loading ? (
+              <div className="galaxy-loading">
+                <Activity size={24} />
+                <span>
+                  Discovering your universe...
+                </span>
+              </div>
+            ) : tracks.length > 0 ? (
+              <Canvas
+                camera={{
+                  position: [0, 1.5, 12],
+                  fov: 52,
+                }}
+                dpr={[1, 1.7]}
+              >
+                <color
+                  attach="background"
+                  args={['#03040d']}
+                />
+
+                <fog
+                  attach="fog"
+                  args={[
+                    '#03040d',
+                    8,
+                    24,
+                  ]}
+                />
+
+                <Galaxy
+                  tracks={tracks}
+                  active={active}
+                  pulse={pulse}
+                  onSelect={choose}
+                />
+              </Canvas>
+            ) : (
+              <div className="galaxy-loading">
+                <Globe2 size={28} />
+                <span>
+                  Search for music to
+                  create your galaxy.
+                </span>
+              </div>
+            )}
+
+            <div className="galaxy-label center">
+              <span className="tiny-star" />
+              {active.genre.toUpperCase()}{' '}
+              SECTOR
+            </div>
+
+            <div className="planet-tooltip">
+              <div
+                className="cover"
+                style={{
+                  background:
+                    active.color,
+                }}
+              >
+                <Disc3 />
               </div>
 
-              <h3>
-                {view === 'library'
-                  ? 'Your library is empty'
-                  : 'No tracks found'}
-              </h3>
+              <div>
+                <small>
+                  NOW PLAYING
+                </small>
 
-              <p>
-                {view === 'library'
-                  ? 'Import audio files from your device to start your personal universe.'
-                  : 'Try another search or explore a different part of the galaxy.'}
-              </p>
+                <b>
+                  {active.title}
+                </b>
 
-              {view === 'library' && (
-                <button
-                  className="primary-button"
-                  onClick={() =>
-                    document
-                      .getElementById(
-                        'music-upload',
-                      )
-                      ?.click()
+                <span>
+                  {active.artist} ·{' '}
+                  {active.album}
+                </span>
+              </div>
+
+              <button
+                onClick={() =>
+                  setLiked(!liked)
+                }
+                className={
+                  liked ? 'liked' : ''
+                }
+              >
+                <Heart
+                  size={17}
+                  fill={
+                    liked
+                      ? 'currentColor'
+                      : 'none'
                   }
-                >
-                  <Upload size={16} />
-                  Import music
-                </button>
-              )}
+                />
+              </button>
             </div>
-          ) : (
-            <div className="track-grid">
-              {displayTracks.map(
-                (track, index) => (
-                  <motion.article
-                    className={`track-card ${
-                      active?.id === track.id
-                        ? 'selected'
-                        : ''
-                    }`}
-                    key={track.id}
-                    initial={{
-                      opacity: 0,
-                      y: 20,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      delay:
-                        Math.min(
-                          index,
-                          8,
-                        ) * 0.035,
-                    }}
-                    whileHover={{
-                      y: -5,
-                    }}
+          </div>
+        </section>
+
+        <AnimatePresence mode="wait">
+          {tab === 'Galaxy' && (
+            <motion.section
+              key="galaxy"
+              initial={{
+                opacity: 0,
+                y: 12,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: -8,
+              }}
+              className="content-grid"
+            >
+              <div className="panel">
+                <div className="panel-head">
+                  <div>
+                    <h2>
+                      Continue exploring
+                    </h2>
+
+                    <p>
+                      Music from your
+                      universe
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setTab('Explore')
+                    }
                   >
-                    <div
-                      className="card-art"
-                      onClick={() =>
-                        void playTrack(track)
-                      }
-                    >
-                      <Cover
-                        track={track}
-                        size="medium"
-                      />
+                    View all
+                  </button>
+                </div>
 
-                      <button className="card-play">
-                        {active?.id ===
-                          track.id &&
-                        playing ? (
-                          <Pause
-                            size={20}
-                            fill="currentColor"
-                          />
-                        ) : (
-                          <Play
-                            size={20}
-                            fill="currentColor"
-                          />
-                        )}
-                      </button>
-
-                      {active?.id ===
-                        track.id &&
-                        playing && (
-                          <div className="playing-indicator">
-                            <Visualizer
-                              playing
-                              color={
-                                track.color
-                              }
-                            />
-                          </div>
-                        )}
-                    </div>
-
-                    <div className="card-info">
-                      <div className="card-title-row">
-                        <div>
-                          <h4>
-                            {track.title}
-                          </h4>
-
-                          <p>
-                            {track.artist}
-                          </p>
-                        </div>
-
-                        <button
+                <div className="track-list">
+                  {filtered
+                    .slice(0, 8)
+                    .map(
+                      (
+                        track,
+                        index,
+                      ) => (
+                        <motion.button
+                          whileHover={{
+                            x: 5,
+                          }}
                           className={
-                            liked.includes(
-                              track.id,
-                            )
-                              ? 'liked'
-                              : ''
+                            track.id ===
+                            active.id
+                              ? 'track active-track'
+                              : 'track'
+                          }
+                          key={
+                            track.id
                           }
                           onClick={() =>
-                            toggleLike(
+                            choose(
                               track,
                             )
                           }
                         >
-                          <Heart
-                            size={17}
-                            fill={
-                              liked.includes(
-                                track.id,
-                              )
-                                ? 'currentColor'
-                                : 'none'
+                          <span className="num">
+                            {index + 1}
+                          </span>
+
+                          <span
+                            className="mini-cover"
+                            style={{
+                              background:
+                                track.color,
+                            }}
+                          >
+                            <Disc3
+                              size={
+                                15
+                              }
+                            />
+                          </span>
+
+                          <span className="track-info">
+                            <b>
+                              {
+                                track.title
+                              }
+                            </b>
+
+                            <small>
+                              {
+                                track.artist
+                              }{' '}
+                              ·{' '}
+                              {
+                                track.album
+                              }
+                            </small>
+                          </span>
+
+                          <span className="genre">
+                            {
+                              track.genre
                             }
+                          </span>
+
+                          <span className="track-time">
+                            {
+                              track.durationLabel ||
+                              formatTime(
+                                track.duration,
+                              )
+                            }
+                          </span>
+
+                          <MoreHorizontal
+                            size={17}
                           />
-                        </button>
-                      </div>
+                        </motion.button>
+                      ),
+                    )}
 
-                      <div className="card-meta">
-                        <span>
-                          {track.genre}
-                        </span>
-
-                        <span>
-                          {track.durationLabel}
-                        </span>
+                  {!loading &&
+                    filtered.length ===
+                      0 && (
+                      <div className="empty-state">
+                        No tracks available.
                       </div>
-                    </div>
-                  </motion.article>
-                ),
-              )}
-            </div>
+                    )}
+                </div>
+              </div>
+
+              <div className="panel recommendation">
+                <div className="panel-head">
+                  <div>
+                    <h2>
+                      Made for tonight
+                    </h2>
+
+                    <p>
+                      AI-ready discovery
+                      mix
+                    </p>
+                  </div>
+
+                  <SparkleIcon
+                    size={18}
+                  />
+                </div>
+
+                <div className="mix-art">
+                  <div className="orb one" />
+                  <div className="orb two" />
+                  <div className="orb three" />
+
+                  <div className="mix-title">
+                    NIGHT
+                    <br />
+                    <span>
+                      DRIVE
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  className="wide-primary"
+                  onClick={() => {
+                    if (tracks[0]) {
+                      choose(
+                        tracks[0],
+                      )
+                    }
+                  }}
+                  disabled={
+                    !tracks.length
+                  }
+                >
+                  <Play size={16} />
+                  Play mix
+                </button>
+              </div>
+            </motion.section>
           )}
-        </section>
-      </main>
 
-      {/* EXPANDED PLAYER */}
-      <AnimatePresence>
-        {showPlayer && active && (
-          <motion.div
-            className="player-overlay"
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
-          >
-            <motion.div
-              className="expanded-player"
+          {tab !== 'Galaxy' && (
+            <motion.section
+              key={tab}
               initial={{
-                y: '100%',
+                opacity: 0,
+                y: 12,
               }}
               animate={{
+                opacity: 1,
                 y: 0,
               }}
-              exit={{
-                y: '100%',
-              }}
-              transition={{
-                type: 'spring',
-                damping: 25,
-                stiffness: 220,
+              className="section-view"
+            >
+              <div className="section-heading">
+                <div>
+                  <span className="eyebrow">
+                    {tab.toUpperCase()}
+                  </span>
+
+                  <h2>
+                    {tab ===
+                    'Explore'
+                      ? 'Discover new worlds'
+                      : tab ===
+                        'Library'
+                      ? 'Your collection'
+                      : 'Public constellations'}
+                  </h2>
+                </div>
+
+                <button className="ghost">
+                  <Plus size={16} />
+                  Create
+                </button>
+              </div>
+
+              <div className="cards">
+                {filtered.map(
+                  (track) => (
+                    <motion.button
+                      whileHover={{
+                        y: -6,
+                      }}
+                      className="music-card"
+                      key={
+                        track.id
+                      }
+                      onClick={() =>
+                        choose(
+                          track,
+                        )
+                      }
+                    >
+                      <div
+                        className="card-art"
+                        style={{
+                          background:
+                            `radial-gradient(circle at 30% 30%, ${track.color}, #080811 65%)`,
+                        }}
+                      >
+                        <span>
+                          ✦
+                        </span>
+
+                        <span className="card-play">
+                          <Play
+                            size={16}
+                          />
+                        </span>
+                      </div>
+
+                      <b>
+                        {
+                          track.title
+                        }
+                      </b>
+
+                      <small>
+                        {
+                          track.artist
+                        }
+                      </small>
+
+                      <span>
+                        {
+                          track.genre
+                        }{' '}
+                        ·{' '}
+                        {
+                          track.mood
+                        }
+                      </span>
+                    </motion.button>
+                  ),
+                )}
+              </div>
+
+              {!loading &&
+                filtered.length ===
+                  0 && (
+                  <div className="empty-state">
+                    No music found.
+                  </div>
+                )}
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <AnimatePresence>
+        {showPlayer && (
+          <motion.div
+            className="player-expanded"
+            initial={{
+              y: '100%',
+            }}
+            animate={{
+              y: 0,
+            }}
+            exit={{
+              y: '100%',
+            }}
+          >
+            <button
+              className="close-player"
+              onClick={() =>
+                setShowPlayer(
+                  false,
+                )
+              }
+            >
+              <X />
+            </button>
+
+            <div
+              className="big-art"
+              style={{
+                background:
+                  `radial-gradient(circle at 30% 20%, ${active.color}, #080811 62%)`,
               }}
             >
-              <button
-                className="close-player"
-                onClick={() =>
-                  setShowPlayer(false)
-                }
-              >
-                <X />
-              </button>
+              <Disc3 size={90} />
+            </div>
 
-              <div
-                className="expanded-art"
-                style={{
-                  background: active.artworkUrl
-                    ? undefined
-                    : `radial-gradient(circle at 30% 20%, ${active.color}, #080811 68%)`,
-                }}
-              >
-                {active.artworkUrl ? (
-                  <img
-                    src={active.artworkUrl}
-                    alt=""
-                  />
-                ) : (
-                  <Disc3 size={100} />
-                )}
-              </div>
+            <div className="now-title">
+              <span>
+                NOW PLAYING
+              </span>
 
-              <div className="expanded-info">
-                <span>NOW PLAYING</span>
+              <h2>
+                {active.title}
+              </h2>
 
-                <h2>{active.title}</h2>
+              <p>
+                {active.artist} ·{' '}
+                {active.album}
+              </p>
+            </div>
 
-                <p>
-                  {active.artist}
-                  {' · '}
-                  {active.album}
-                </p>
-              </div>
-
-              <Visualizer
-                playing={playing}
-                color={active.color}
-              />
-
-              <div className="expanded-progress">
-                <span>
-                  {formatTime(currentTime)}
-                </span>
-
-                <input
-                  type="range"
-                  min="0"
-                  max={
-                    duration ||
-                    active.duration ||
-                    1
-                  }
-                  value={currentTime}
-                  onChange={seek}
-                />
-
-                <span>
-                  {formatTime(
-                    duration ||
-                      active.duration,
-                  )}
-                </span>
-              </div>
-
-              <div className="expanded-controls">
-                <button>
-                  <Shuffle size={20} />
-                </button>
-
-                <button
-                  onClick={() =>
-                    void prevTrack()
-                  }
-                >
-                  <SkipBack size={25} />
-                </button>
-
-                <button
-                  className="main-play-button"
-                  onClick={() =>
-                    void togglePlay()
-                  }
-                >
-                  {loadingTrack ? (
-                    <span className="spinner" />
-                  ) : playing ? (
-                    <Pause
-                      size={27}
-                      fill="currentColor"
-                    />
-                  ) : (
-                    <Play
-                      size={27}
-                      fill="currentColor"
-                    />
-                  )}
-                </button>
-
-                <button
-                  onClick={() =>
-                    void nextTrack()
-                  }
-                >
-                  <SkipForward
-                    size={25}
-                  />
-                </button>
-
-                <button
-                  className={
-                    liked.includes(
-                      active.id,
-                    )
-                      ? 'liked'
-                      : ''
-                  }
-                  onClick={() =>
-                    toggleLike(active)
-                  }
-                >
-                  <Heart
-                    size={20}
-                    fill={
-                      liked.includes(
-                        active.id,
-                      )
-                        ? 'currentColor'
-                        : 'none'
-                    }
-                  />
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* BOTTOM PLAYER */}
-      {active && (
-        <motion.footer
-          className="bottom-player"
-          initial={{
-            y: 100,
-          }}
-          animate={{
-            y: 0,
-          }}
-        >
-          <div
-            className="player-current"
-            onClick={() =>
-              setShowPlayer(true)
-            }
-          >
-            <Cover
-              track={active}
-              size="small"
+            <Visualizer
+              playing={playing}
+              color={active.color}
             />
 
-            <div>
-              <strong>
-                {active.title}
-              </strong>
-
+            <div className="progress">
               <span>
-                {active.artist}
-              </span>
-            </div>
-          </div>
-
-          <div className="player-center">
-            <div className="player-buttons">
-              <button
-                onClick={() =>
-                  void prevTrack()
-                }
-              >
-                <SkipBack size={17} />
-              </button>
-
-              <button
-                className="player-play"
-                onClick={() =>
-                  void togglePlay()
-                }
-              >
-                {playing ? (
-                  <Pause
-                    size={18}
-                    fill="currentColor"
-                  />
-                ) : (
-                  <Play
-                    size={18}
-                    fill="currentColor"
-                  />
+                {formatTime(
+                  currentTime,
                 )}
-              </button>
-
-              <button
-                onClick={() =>
-                  void nextTrack()
-                }
-              >
-                <SkipForward size={17} />
-              </button>
-            </div>
-
-            <div className="player-progress">
-              <span>
-                {formatTime(currentTime)}
               </span>
 
               <input
                 type="range"
                 min="0"
                 max={
-                  duration ||
-                  active.duration ||
-                  1
+                  duration || 1
                 }
-                value={currentTime}
-                onChange={seek}
+                value={
+                  Math.min(
+                    currentTime,
+                    duration ||
+                      1,
+                  )
+                }
+                onChange={(event) => {
+                  const time =
+                    Number(
+                      event
+                        .target
+                        .value,
+                    )
+
+                  audioEngine.seek(time)
+                }}
               />
 
               <span>
                 {formatTime(
                   duration ||
-                    active.duration,
+                    active.duration ||
+                    0,
                 )}
               </span>
             </div>
-          </div>
 
-          <div className="player-right">
-            <Visualizer
-              playing={playing}
-              color={active.color}
-            />
+            <div className="big-controls">
+              <button>
+                <Shuffle />
+              </button>
 
-            <button
-              className={
-                liked.includes(
-                  active.id,
-                )
-                  ? 'liked'
-                  : ''
-              }
-              onClick={() =>
-                toggleLike(active)
-              }
-            >
-              <Heart
-                size={17}
-                fill={
-                  liked.includes(
-                    active.id,
-                  )
-                    ? 'currentColor'
-                    : 'none'
+              <button onClick={prev}>
+                <SkipBack />
+              </button>
+
+              <button
+                className="play-big"
+                onClick={() =>
+                  void audioEngine.toggle()
                 }
-              />
-            </button>
+              >
+                {playing ? (
+                  <Pause />
+                ) : (
+                  <Play />
+                )}
+              </button>
 
-            <button
-              onClick={() =>
-                setMuted(
-                  (current) => !current,
-                )
-              }
-            >
-              {muted ||
-              volume === 0 ? (
-                <VolumeX size={17} />
-              ) : (
-                <Volume2 size={17} />
-              )}
-            </button>
+              <button onClick={next}>
+                <SkipForward />
+              </button>
 
-            <input
-              className="volume-slider"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={
-                muted ? 0 : volume
-              }
-              onChange={(event) => {
-                setVolume(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-                setMuted(false)
-              }}
-            />
-          </div>
-        </motion.footer>
-      )}
-
-      {/* SEARCH POPUP */}
-      <AnimatePresence>
-        {query &&
-          searchResults.length > 0 && (
-            <motion.div
-              className="search-popover"
-              initial={{
-                opacity: 0,
-                y: -8,
-                scale: 0.98,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-              }}
-              exit={{
-                opacity: 0,
-                y: -8,
-                scale: 0.98,
-              }}
-            >
-              <div className="search-popover-header">
-                <strong>
-                  Results
-                </strong>
-
-                <span>
-                  {searchResults.length}{' '}
-                  found
-                </span>
-              </div>
-
-              {searchResults
-                .slice(0, 8)
-                .map((track) => (
-                  <button
-                    className="search-result"
-                    key={track.id}
-                    onClick={() => {
-                      void playTrack(
-                        track,
-                      )
-                      setQuery('')
-                    }}
-                  >
-                    <Cover
-                      track={track}
-                      size="small"
-                    />
-
-                    <span>
-                      <strong>
-                        {track.title}
-                      </strong>
-
-                      <small>
-                        {track.artist}
-                        {' · '}
-                        {track.album}
-                      </small>
-                    </span>
-
-                    <Play size={16} />
-                  </button>
-                ))}
-            </motion.div>
-          )}
+              <button>
+                <Repeat2 />
+              </button>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      {/* QUICK NAV */}
-      <div className="quick-nav">
-        <button
-          className={
-            view === 'home' ? 'active' : ''
+      <footer
+        className="player"
+        onClick={(event) => {
+          if (
+            (
+              event.target as HTMLElement
+            ).closest(
+              'button,input',
+            )
+          ) {
+            return
           }
-          onClick={() =>
-            setView('home')
-          }
-        >
-          <Home size={18} />
-          <span>Home</span>
-        </button>
 
-        <button
-          className={
-            view === 'discover'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setView('discover')
-          }
-        >
-          <Globe2 size={18} />
-          <span>Discover</span>
-        </button>
+          setShowPlayer(true)
+        }}
+      >
+        <div className="current">
+          <div
+            className="mini-cover"
+            style={{
+              background:
+                active.color,
+            }}
+          >
+            <Disc3 size={15} />
+          </div>
 
-        <button
-          className={
-            view === 'library'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setView('library')
-          }
-        >
-          <Library size={18} />
-          <span>Library</span>
-        </button>
+          <div>
+            <b>
+              {active.title}
+            </b>
 
-        <button
-          className={
-            view === 'ai-dj'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setView('ai-dj')
-          }
-        >
-          <Sparkles size={18} />
-          <span>AI DJ</span>
-        </button>
-      </div>
+            <small>
+              {active.artist}
+            </small>
+          </div>
+        </div>
+
+        <div className="player-controls">
+          <button onClick={prev}>
+            <SkipBack />
+          </button>
+
+          <button
+            className="play"
+            onClick={() => void audioEngine.toggle()}
+          >
+            {playing ? (
+              <Pause />
+            ) : (
+              <Play />
+            )}
+          </button>
+
+          <button onClick={next}>
+            <SkipForward />
+          </button>
+        </div>
+
+        <div className="player-right">
+          <Visualizer
+            playing={playing}
+            color={active.color}
+          />
+
+          <button
+            onClick={() =>
+              setLiked(!liked)
+            }
+            className={
+              liked ? 'liked' : ''
+            }
+          >
+            <Heart
+              size={18}
+              fill={
+                liked
+                  ? 'currentColor'
+                  : 'none'
+              }
+            />
+          </button>
+
+          <button
+            onClick={() => audioEngine.toggleMute()}
+          >
+            {muted ||
+            volume === 0 ? (
+              <VolumeX size={18} />
+            ) : (
+              <Volume2 size={18} />
+            )}
+          </button>
+
+          <input
+            className="volume"
+            type="range"
+            min="0"
+            max="100"
+            value={
+              muted
+                ? 0
+                : volume
+            }
+            onChange={(event) => {
+              audioEngine.setVolume(
+                Number(event.target.value) / 100,
+              )
+            }}
+          />
+        </div>
+      </footer>
+
+      {query && (
+        <div className="search-pop">
+          <div className="search-pop-head">
+            <b>Results</b>
+
+            <span>
+              {loading
+                ? 'Searching...'
+                : `${filtered.length} found`}
+            </span>
+          </div>
+
+          {filtered.map(
+            (track) => (
+              <button
+                key={track.id}
+                onClick={() =>
+                  choose(
+                    track,
+                  )
+                }
+              >
+                <span
+                  className="mini-cover"
+                  style={{
+                    background:
+                      track.color,
+                  }}
+                >
+                  <Disc3
+                    size={14}
+                  />
+                </span>
+
+                <span>
+                  <b>
+                    {
+                      track.title
+                    }
+                  </b>
+
+                  <small>
+                    {
+                      track.artist
+                    }{' '}
+                    ·{' '}
+                    {
+                      track.album
+                    }
+                  </small>
+                </span>
+
+                <Play size={15} />
+              </button>
+            ),
+          )}
+
+          {!loading &&
+            filtered.length ===
+              0 && (
+              <p>
+                {message ||
+                  'No worlds found.'}
+              </p>
+            )}
+        </div>
+      )}
     </div>
   )
 }
-
-export default App
