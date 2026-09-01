@@ -1,5 +1,7 @@
 import './App.css'
 
+import { createPortal } from 'react-dom'
+
 import {
   lazy,
   Suspense,
@@ -9,6 +11,7 @@ import {
   useState,
   type ChangeEvent,
   type CSSProperties,
+  type MouseEvent,
 } from 'react'
 
 import {
@@ -1025,6 +1028,151 @@ function LikeHeartBurst({
 }
 
 
+type ShuffleMode = 'playlist' | 'all-playlists' | 'galaxy'
+
+function shuffleArray<T>(items: T[]): T[] {
+  const result = [...items]
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
+function uniqueTracks(items: Track[]): Track[] {
+  const map = new Map<string, Track>()
+  for (const track of items) {
+    if (!map.has(track.id)) map.set(track.id, track)
+  }
+  return Array.from(map.values())
+}
+
+function ShuffleMenu({
+  mode,
+  playlistName,
+  playlistCount,
+  allPlaylistCount,
+  hasPlaylists,
+  galaxyCount,
+  onSelect,
+  anchorRect,
+}: {
+  mode: ShuffleMode | null
+  playlistName?: string
+  playlistCount: number
+  allPlaylistCount: number
+  hasPlaylists: boolean
+  galaxyCount: number
+  onSelect: (mode: ShuffleMode) => void
+  anchorRect: DOMRect
+}) {
+  const width = Math.min(300, window.innerWidth - 24)
+  const left = Math.max(
+    12,
+    Math.min(
+      anchorRect.left + anchorRect.width / 2 - width / 2,
+      window.innerWidth - width - 12,
+    ),
+  )
+
+  const bottom = Math.max(
+    12,
+    window.innerHeight - anchorRect.top + 12,
+  )
+
+  const optionClass = (active: boolean) =>
+    active ? 'shuffle-option active' : 'shuffle-option'
+
+  const playlistSecondary = playlistName
+    ? `Current · ${playlistCount} songs`
+    : undefined
+
+  const personalSecondary = hasPlaylists
+    ? 'add to your Playlist'
+    : 'Create Playlist'
+
+  const menu = (
+    <motion.div
+      className="shuffle-menu"
+      initial={{ opacity: 0, y: 7, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 7, scale: 0.97 }}
+      transition={{ duration: 0.14, ease: 'easeOut' }}
+      role="menu"
+      onPointerDown={(event) => event.stopPropagation()}
+      style={{
+        '--shuffle-left': `${left}px`,
+        '--shuffle-bottom': `${bottom}px`,
+        '--shuffle-width': `${width}px`,
+      } as CSSProperties}
+    >
+      <button
+        type="button"
+        role="menuitem"
+        className={optionClass(mode === 'playlist')}
+        onClick={() => onSelect('playlist')}
+        disabled={!playlistName}
+      >
+        <span className="shuffle-option-icon">
+          <ListMusic size={16} />
+        </span>
+
+        <span className="shuffle-option-copy">
+          <b>Shuffle playlist</b>
+          {playlistSecondary && <small>{playlistSecondary}</small>}
+        </span>
+
+        {mode === 'playlist' && <Check size={15} />}
+      </button>
+
+      <button
+        type="button"
+        role="menuitem"
+        className={optionClass(mode === 'all-playlists')}
+        onClick={() => {
+          if (allPlaylistCount === 0) {
+            onSelect('all-playlists')
+            return
+          }
+          onSelect('all-playlists')
+        }}
+        disabled={false}
+      >
+        <span className="shuffle-option-icon">
+          <ListMusic size={16} />
+        </span>
+
+        <span className="shuffle-option-copy">
+          <b>Shuffle your playlist</b>
+          <small>{personalSecondary}</small>
+        </span>
+
+        {mode === 'all-playlists' && <Check size={15} />}
+      </button>
+
+      <button
+        type="button"
+        role="menuitem"
+        className={optionClass(mode === 'galaxy')}
+        onClick={() => onSelect('galaxy')}
+        disabled={galaxyCount === 0}
+      >
+        <span className="shuffle-option-icon">
+          <SparkleIcon size={16} />
+        </span>
+
+        <span className="shuffle-option-copy">
+          <b>Shuffle Music Galaxy</b>
+        </span>
+
+        {mode === 'galaxy' && <Check size={15} />}
+      </button>
+    </motion.div>
+  )
+
+  return createPortal(menu, document.body)
+}
+
 export default function App() {
   const [
     tracks,
@@ -1162,6 +1310,10 @@ export default function App() {
     () => audioEngine.getState().repeat,
   )
 
+  const [shuffleMode, setShuffleMode] = useState<ShuffleMode | null>(null)
+  const [shuffleMenuOpen, setShuffleMenuOpen] = useState(false)
+  const [shuffleMenuAnchor, setShuffleMenuAnchor] = useState<DOMRect | null>(null)
+
 
   /* ========================================================================
      AUDIO STATE
@@ -1286,6 +1438,32 @@ export default function App() {
       )
     }
   }, [searchOpen])
+
+
+  /* ========================================================================
+     SHUFFLE MENU OUTSIDE CLICK
+     ======================================================================== */
+
+  useEffect(() => {
+    if (!shuffleMenuOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement
+
+      if (!target.closest('.shuffle-anchor') && !target.closest('.shuffle-menu')) {
+        setShuffleMenuOpen(false)
+        setShuffleMenuAnchor(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [shuffleMenuOpen])
 
 
   /* ========================================================================
@@ -1760,15 +1938,99 @@ export default function App() {
   }
 
 
-  const toggleShuffle = () => {
-    audioEngine.toggleShuffle()
+  const toggleShuffle = (event: MouseEvent<HTMLButtonElement>) => {
+    if (shuffleMenuOpen) {
+      setShuffleMenuOpen(false)
+      setShuffleMenuAnchor(null)
+      return
+    }
 
-    const nextShuffle = !shuffleUi
-    setShuffleUi(nextShuffle)
+    setShuffleMenuAnchor(
+      event.currentTarget.getBoundingClientRect(),
+    )
+    setShuffleMenuOpen(true)
+  }
+
+  const applyShuffleMode = (mode: ShuffleMode) => {
+    let source: Track[] = []
+
+    if (mode === 'playlist') {
+      const playlist = playlists.find((item) =>
+        item.trackIds.includes(active.id),
+      )
+
+      if (!playlist) {
+        setMessage('The current song is not in a playlist.')
+        setShuffleMenuOpen(false)
+        setShuffleMenuAnchor(null)
+        return
+      }
+
+      source = playlist.trackIds
+        .map(
+          (id) =>
+            tracks.find((track) => track.id === id) ||
+            libraryTracks.find((track) => track.id === id),
+        )
+        .filter((track): track is Track => Boolean(track))
+    } else if (mode === 'all-playlists') {
+      if (!playlists.length) {
+        setShuffleMenuOpen(false)
+        setShuffleMenuAnchor(null)
+        openCreatePlaylist()
+        return
+      }
+
+      source = playlists
+        .flatMap((playlist) => playlist.trackIds)
+        .map(
+          (id) =>
+            tracks.find((track) => track.id === id) ||
+            libraryTracks.find((track) => track.id === id),
+        )
+        .filter((track): track is Track => Boolean(track))
+    } else {
+      source = tracks
+    }
+
+    const unique = uniqueTracks(source)
+
+    if (!unique.length) {
+      setMessage('No songs are available for this shuffle source.')
+      setShuffleMenuOpen(false)
+      return
+    }
+
+    const hasActive = unique.some((track) => track.id === active.id)
+    const remaining = shuffleArray(
+      unique.filter((track) => track.id !== active.id),
+    )
+    const queue = hasActive ? [active, ...remaining] : remaining
+
+    // The queue itself is randomized, so disable the engine's legacy boolean
+    // shuffle to avoid applying a second shuffle layer.
+    if (audioEngine.getState().shuffle) {
+      audioEngine.toggleShuffle()
+    }
+
+    audioEngine.setQueue(queue)
+
+    setShuffleMode(mode)
+    setShuffleUi(true)
     setAudioState((previous) => ({
       ...previous,
-      shuffle: nextShuffle,
+      shuffle: true,
     }))
+    setShuffleMenuOpen(false)
+    setShuffleMenuAnchor(null)
+
+    setMessage(
+      mode === 'playlist'
+        ? 'Playlist shuffle enabled.'
+        : mode === 'all-playlists'
+          ? 'All playlist shuffle enabled.'
+          : 'Music Galaxy shuffle enabled.',
+    )
   }
 
 
@@ -2317,6 +2579,33 @@ export default function App() {
         playlist.id ===
         selectedPlaylistId,
     )
+
+  const currentPlaylist = playlists.find((playlist) =>
+    playlist.trackIds.includes(active.id),
+  )
+
+  const currentPlaylistTracks = currentPlaylist
+    ? uniqueTracks(
+        currentPlaylist.trackIds
+          .map(
+            (id) =>
+              tracks.find((track) => track.id === id) ||
+              libraryTracks.find((track) => track.id === id),
+          )
+          .filter((track): track is Track => Boolean(track)),
+      )
+    : []
+
+  const allPlaylistTracks = uniqueTracks(
+    playlists
+      .flatMap((playlist) => playlist.trackIds)
+      .map(
+        (id) =>
+          tracks.find((track) => track.id === id) ||
+          libraryTracks.find((track) => track.id === id),
+      )
+      .filter((track): track is Track => Boolean(track)),
+  )
 
   const repeatLabel =
     repeat === 'one'
@@ -4296,7 +4585,20 @@ export default function App() {
         </AnimatePresence>
 
       </main>
-
+\n\n      <AnimatePresence>
+        {shuffleMenuOpen && shuffleMenuAnchor && (
+          <ShuffleMenu
+            mode={shuffleMode}
+            playlistName={currentPlaylist?.name}
+            playlistCount={currentPlaylistTracks.length}
+            allPlaylistCount={allPlaylistTracks.length}
+            hasPlaylists={playlists.length > 0}
+            galaxyCount={tracks.length}
+            onSelect={applyShuffleMode}
+            anchorRect={shuffleMenuAnchor}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ================================================================== */}
       {/* EXPANDED PLAYER                                                    */}
@@ -4407,23 +4709,21 @@ export default function App() {
 
             <div className="big-controls">
 
-              <button
-                className={
-                  shuffle
-                    ? 'control-active'
-                    : ''
-                }
-                onClick={
-                  toggleShuffle
-                }
-                aria-pressed={shuffle}
-                aria-label={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
-                title={shuffle ? 'Shuffle on' : 'Shuffle off'}
-              >
-
-                <Shuffle />
-
-              </button>
+              <div className="shuffle-anchor">
+                <button
+                  className={
+                    shuffle
+                      ? 'control-active'
+                      : ''
+                  }
+                  onClick={toggleShuffle}
+                  aria-pressed={shuffle}
+                  aria-label="Choose shuffle source"
+                  title="Choose shuffle source"
+                >
+                  <Shuffle />
+                </button>
+              </div>
 
 
               <button
@@ -4539,30 +4839,22 @@ export default function App() {
 
           <div className="player-controls">
 
-          <button
-            className={
-              shuffle
-                ? 'control-active'
-                : ''
-            }
-            onClick={() => {
-              toggleShuffle()
-            }}
-            aria-label={
-              shuffle
-                ? 'Disable shuffle'
-                : 'Enable shuffle'
-            }
-            title={
-              shuffle
-                ? 'Shuffle on'
-                : 'Shuffle off'
-            }
-            aria-pressed={shuffle}
-            data-active={shuffle ? 'true' : 'false'}
-          >
-            <Shuffle />
-          </button>
+          <div className="shuffle-anchor">
+            <button
+              className={
+                shuffle
+                  ? 'control-active'
+                  : ''
+              }
+              onClick={toggleShuffle}
+              aria-label="Choose shuffle source"
+              title="Choose shuffle source"
+              aria-pressed={shuffle}
+              data-active={shuffle ? 'true' : 'false'}
+            >
+              <Shuffle />
+            </button>
+          </div>
 
 
           <button

@@ -4897,3 +4897,1294 @@ input:focus-visible {
 .like-burst-heart {
   color: var(--like-pink) !important;
 }
+
+/* ============================================================
+   SHUFFLE SOURCE MENU
+   ============================================================ */
+
+.shuffle-anchor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.shuffle-menu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%);
+  z-index: 9000;
+
+  width: min(330px, calc(100vw - 24px));
+  padding: 8px;
+
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(8,9,20,.98);
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.58),
+    0 0 40px rgba(139,92,246,.10);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.big-controls .shuffle-menu {
+  bottom: calc(100% + 14px);
+}
+
+.shuffle-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.shuffle-menu-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.shuffle-menu-header span {
+  color: rgba(255,255,255,.38);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.shuffle-menu-header b {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.shuffle-menu-header em {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #ff69b4;
+  background: rgba(255,105,180,.09);
+  border: 1px solid rgba(255,105,180,.18);
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.shuffle-option {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  text-align: left;
+  color: #fff;
+  background: transparent;
+  transition:
+    background .16s ease,
+    border-color .16s ease,
+    transform .16s ease;
+}
+
+.shuffle-option:hover:not(:disabled) {
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.05);
+  transform: translateY(-1px);
+}
+
+.shuffle-option.active {
+  background: rgba(139,92,246,.13);
+  border-color: rgba(167,139,250,.18);
+}
+
+.shuffle-option:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+.shuffle-option > svg {
+  flex: 0 0 auto;
+  color: #a78bfa;
+}
+
+.shuffle-option-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #c4b5fd;
+  background: rgba(139,92,246,.12);
+}
+
+.shuffle-option-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.shuffle-option-copy b {
+  overflow: hidden;
+  color: rgba(255,255,255,.94);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shuffle-option-copy small {
+  overflow: hidden;
+  color: rgba(255,255,255,.38);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shuffle-option.active .shuffle-option-copy b {
+  color: #fff;
+}
+
+.shuffle-option.active > svg:last-child {
+  color: #a78bfa;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 680px) {
+  .shuffle-menu {
+    left: 0;
+    transform: none;
+    width: min(320px, calc(100vw - 20px));
+  }
+
+  .big-controls .shuffle-menu {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ========================================================================
+   SHUFFLE SOURCE MENU — FINAL UPWARD PLACEMENT
+   ======================================================================== */
+
+.shuffle-anchor {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  height: max-content !important;
+  overflow: visible !important;
+}
+
+.shuffle-anchor > .shuffle-menu {
+  position: absolute !important;
+  left: 0 !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: calc(100% + 12px) !important;
+  transform: none !important;
+  z-index: 10000 !important;
+
+  width: 330px !important;
+  max-width: min(330px, calc(100vw - 24px)) !important;
+  max-height: min(62vh, 420px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  padding: 9px !important;
+  margin: 0 !important;
+
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 16px !important;
+  background: rgba(8,9,20,.985) !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.62),
+    0 0 40px rgba(139,92,246,.12) !important;
+
+  pointer-events: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.18) transparent;
+}
+
+.shuffle-anchor > .shuffle-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shuffle-anchor > .shuffle-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shuffle-anchor > .shuffle-menu::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.16);
+  border-radius: 999px;
+}
+
+.shuffle-anchor > .shuffle-menu::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: auto;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  background: rgba(8,9,20,.985);
+  border-right: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* Both normal and expanded player use the same anchor-relative placement. */
+.big-controls .shuffle-anchor,
+.player-controls .shuffle-anchor {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.big-controls .shuffle-anchor > .shuffle-menu,
+.player-controls .shuffle-anchor > .shuffle-menu {
+  left: 0 !important;
+  bottom: calc(100% + 14px) !important;
+  top: auto !important;
+  transform: none !important;
+}
+
+@media (max-width: 680px) {
+  .shuffle-anchor > .shuffle-menu,
+  .big-controls .shuffle-anchor > .shuffle-menu,
+  .player-controls .shuffle-anchor > .shuffle-menu {
+    width: min(310px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    left: 0 !important;
+  }
+
+  /* If the anchor is too close to the right edge, keep the menu on-screen. */
+  .shuffle-anchor:last-child > .shuffle-menu {
+    left: auto !important;
+    right: 0 !important;
+  }
+
+  .shuffle-anchor:last-child > .shuffle-menu::after {
+    left: auto;
+    right: 16px;
+  }
+}
+
+
+
+/* FINAL SHUFFLE MENU POSITIONING — fixed to the actual clicked button. */
+.shuffle-menu {
+  position: fixed !important;
+  left: var(--shuffle-left) !important;
+  bottom: var(--shuffle-bottom) !important;
+  top: auto !important;
+  right: auto !important;
+  width: min(330px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: min(62vh, 420px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 100000 !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+  transform-origin: bottom center !important;
+}
+
+/* The menu belongs to whichever Shuffle button was clicked, in both modes. */
+.shuffle-anchor {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 680px) {
+  .shuffle-menu {
+    width: min(310px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+
+/* ==========================================================================
+   SHUFFLE SOURCE MENU — PORTAL / ABOVE BOTH PLAYERS
+   The menu is rendered directly under document.body by React Portal, so it
+   escapes the transformed/staking contexts of the normal and extended player.
+   ========================================================================== */
+.shuffle-menu {
+  position: fixed !important;
+  z-index: 200000 !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: min(60vh, 420px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+  transform-origin: bottom center !important;
+  isolation: isolate;
+}
+
+.shuffle-menu::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  width: 13px;
+  height: 13px;
+  background: inherit;
+  border-right: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  transform: translateX(-50%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* Never let an old child-menu rule move the portal menu. */
+.shuffle-anchor > .shuffle-menu {
+  position: fixed !important;
+  inset: auto !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+}
+
+@media (max-width: 680px) {
+  .shuffle-menu {
+    max-width: calc(100vw - 20px) !important;
+  }
+}
+
+
+/* ========================================================================
+   SHUFFLE MENU — FINAL AUTHORITATIVE RULES
+   The menu is rendered through a portal directly under document.body.
+   These rules intentionally override older anchor-relative menu rules.
+   ======================================================================== */
+body > .shuffle-menu {
+  position: fixed !important;
+  left: var(--shuffle-left) !important;
+  bottom: var(--shuffle-bottom) !important;
+  top: auto !important;
+  right: auto !important;
+  width: var(--shuffle-width) !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 6px !important;
+  margin: 0 !important;
+  z-index: 2147483647 !important;
+  box-sizing: border-box !important;
+  transform-origin: bottom center !important;
+}
+
+body > .shuffle-menu .shuffle-menu-header {
+  display: none !important;
+}
+
+body > .shuffle-menu .shuffle-option {
+  min-height: 48px !important;
+  padding: 7px 8px !important;
+  gap: 9px !important;
+  border-radius: 10px !important;
+}
+
+body > .shuffle-menu .shuffle-option-icon {
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
+  border-radius: 8px !important;
+}
+
+body > .shuffle-menu .shuffle-option-copy b {
+  font-size: 10px !important;
+}
+
+body > .shuffle-menu .shuffle-option-copy small {
+  font-size: 8px !important;
+}
+
+body > .shuffle-menu::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: -5px !important;
+  width: 10px !important;
+  height: 10px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+  background: rgba(8,9,20,.985) !important;
+  border-right: 1px solid rgba(255,255,255,.08) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  pointer-events: none !important;
+}
+
+/* The Shuffle button itself must remain visible in both players. */
+.shuffle-anchor > button,
+.player-controls .shuffle-anchor > button,
+.big-controls .shuffle-anchor > button {
+  display: grid !important;
+  place-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 0 0 auto !important;
+}
+
+/* Never reintroduce scrollbars on the three-option menu. */
+body > .shuffle-menu,
+body > .shuffle-menu * {
+  scrollbar-width: none !important;
+}
+
+body > .shuffle-menu::-webkit-scrollbar,
+body > .shuffle-menu *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@media (max-width: 680px) {
+  body > .shuffle-menu {
+    width: min(300px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+}
+
+/* ==========================================================================
+   SHUFFLE MENU — COMPACT FINAL WIDTH
+   Keeps the portal positioning but removes the wasted right-side space.
+   Applies to both normal and extended player modes.
+   ========================================================================== */
+body > .shuffle-menu {
+  width: 286px !important;
+  min-width: 286px !important;
+  max-width: 286px !important;
+  box-sizing: border-box !important;
+  padding: 6px !important;
+}
+
+body > .shuffle-menu .shuffle-option {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 8px 8px !important;
+  gap: 9px !important;
+}
+
+body > .shuffle-menu .shuffle-option-copy {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+body > .shuffle-menu .shuffle-option-copy b,
+body > .shuffle-menu .shuffle-option-copy small {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 680px) {
+  body > .shuffle-menu {
+    width: min(286px, calc(100vw - 20px)) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+}
+
+/* ==========================================================================
+   MUSIC GALAXY — UNIVERSAL RESPONSIVE SYSTEM
+   Android / iOS / smartphones / foldables / tablets / laptops / desktops / TV
+   ========================================================================== */
+
+:root {
+  --player-height: 84px;
+  --content-gutter: clamp(12px, 2vw, 32px);
+  --touch-target: 44px;
+}
+
+html {
+  width: 100%;
+  min-width: 320px;
+  background: #03040d;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100%;
+  min-width: 320px;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+#root,
+.app {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100dvh;
+}
+
+/* Prevent accidental horizontal overflow from long titles/content. */
+.main,
+.panel,
+.section-view,
+.content-grid,
+.playlist-layout,
+.playlist-detail,
+.playlist-sidebar,
+.track,
+.track-main,
+.player,
+.player-left,
+.player-seek,
+.player-right,
+.hero,
+.section-heading,
+.cards {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Touch-friendly controls without making desktop UI oversized. */
+button,
+input,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 1600px) {
+  .main {
+    max-width: 1800px;
+    padding-left: clamp(28px, 2.2vw, 48px);
+    padding-right: clamp(28px, 2.2vw, 48px);
+  }
+
+  .hero {
+    padding-top: clamp(42px, 3vw, 70px);
+    padding-bottom: clamp(26px, 2vw, 36px);
+  }
+
+  .hero h1 {
+    font-size: clamp(64px, 4vw, 92px);
+  }
+
+  .canvas-wrap {
+    height: clamp(520px, 46vh, 720px);
+  }
+
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+}
+
+/* Large desktop / TV browser sizes. */
+@media (min-width: 2200px) {
+  .sidebar {
+    width: 270px;
+  }
+
+  .main {
+    margin-left: 270px;
+    max-width: 2200px;
+    padding-bottom: 140px;
+  }
+
+  .brand {
+    font-size: 22px;
+  }
+
+  .nav-item {
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  .hero h1 {
+    font-size: clamp(78px, 4vw, 110px);
+  }
+
+  .hero p {
+    font-size: 15px;
+    max-width: 760px;
+  }
+
+  .canvas-wrap {
+    height: min(700px, 58vh);
+  }
+
+  .player {
+    height: 96px;
+  }
+
+  .player-left .player-controls > button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .player-left .player-controls > button.play {
+    width: 60px;
+    height: 60px;
+  }
+
+  .player > .player-seek .player-time {
+    font-size: 12px;
+  }
+
+  .player-right .volume-control {
+    width: 180px !important;
+    min-width: 180px !important;
+  }
+}
+
+/* Laptop / compact desktop. */
+@media (max-width: 1180px) {
+  .sidebar {
+    width: 210px;
+  }
+
+  .main {
+    margin-left: 210px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .hero {
+    gap: 24px;
+  }
+
+  .hero-copy {
+    max-width: min(670px, 72vw);
+  }
+
+  .player {
+    grid-template-columns:
+      minmax(330px, 0.9fr)
+      minmax(220px, 1.5fr)
+      minmax(150px, 0.5fr) !important;
+    column-gap: 12px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .player-left {
+    gap: 10px !important;
+  }
+
+  .player-left .current {
+    min-width: 105px !important;
+    max-width: 170px !important;
+  }
+
+  .player-left .player-controls {
+    gap: 2px !important;
+  }
+
+  .player-left .player-controls > button {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .player-left .player-controls > button.play {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  .player > .player-right .volume-control {
+    width: 118px !important;
+    min-width: 118px !important;
+  }
+}
+
+/* Tablet landscape / portrait, including iPad and Android tablets. */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    z-index: 80;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main {
+    margin-left: 0;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: calc(var(--player-height) + 24px);
+  }
+
+  .mobile-menu {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    display: grid;
+    place-items: center;
+    flex: 0 0 var(--touch-target);
+  }
+
+  .topbar {
+    height: 70px;
+    gap: 10px;
+  }
+
+  .search-wrapper {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .top-actions {
+    flex: 0 0 auto;
+  }
+
+  .top-actions .icon-btn,
+  .top-actions .publish {
+    display: none;
+  }
+
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 28px;
+  }
+
+  .hero-copy {
+    max-width: 100%;
+  }
+
+  .hero h1 {
+    font-size: clamp(42px, 8vw, 66px);
+  }
+
+  .stats {
+    display: flex;
+    gap: 24px;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .playlist-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .playlist-sidebar {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  /* Compact but complete player: controls | seeker | actions. */
+  .player {
+    --player-height: 76px;
+    height: var(--player-height) !important;
+    grid-template-columns:
+      max-content
+      minmax(120px, 1fr)
+      max-content !important;
+    column-gap: 10px !important;
+    padding:
+      0
+      max(10px, env(safe-area-inset-right))
+      0
+      max(10px, env(safe-area-inset-left)) !important;
+  }
+
+  .current {
+    display: none !important;
+  }
+
+  .player-left {
+    width: max-content !important;
+    gap: 2px !important;
+  }
+
+  .player-left .player-controls {
+    gap: 1px !important;
+  }
+
+  .player-left .player-controls > button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .player-left .player-controls > button.play {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .player > .player-seek {
+    grid-template-columns:
+      34px
+      minmax(60px, 1fr)
+      34px !important;
+    gap: 5px !important;
+  }
+
+  .player > .player-seek .player-time {
+    width: 34px !important;
+    min-width: 34px !important;
+    font-size: 8px !important;
+  }
+
+  .player > .player-right {
+    width: max-content !important;
+    min-width: 0 !important;
+    gap: 4px !important;
+  }
+
+  .player > .player-right .volume-control {
+    width: 38px !important;
+    min-width: 38px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .player > .player-right .volume-slider-wrap {
+    display: none !important;
+  }
+
+  .player > .player-right .player-action,
+  .player > .player-right .volume-button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .canvas-wrap {
+    height: clamp(360px, 52vh, 600px);
+  }
+}
+
+/* Narrow tablets / large phones / foldables. */
+@media (max-width: 680px) {
+  :root {
+    --player-height: 72px;
+  }
+
+  .main {
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-bottom: calc(var(--player-height) + 18px);
+  }
+
+  .topbar {
+    height: 64px;
+  }
+
+  .search {
+    height: 40px;
+  }
+
+  .hero {
+    padding:
+      20px
+      2px
+      14px;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 10vw, 48px);
+    letter-spacing: -2.2px;
+  }
+
+  .hero p {
+    font-size: 11px;
+  }
+
+  .stats {
+    display: none;
+  }
+
+  .hero-actions {
+    flex-wrap: wrap;
+  }
+
+  .hero-actions .ghost {
+    display: none;
+  }
+
+  .galaxy-toolbar {
+    height: 58px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .galaxy-toolbar span {
+    display: none;
+  }
+
+  .canvas-wrap {
+    height: 400px;
+  }
+
+  .planet-tooltip {
+    left: 10px;
+    bottom: 10px;
+    min-width: 0;
+    width: min(260px, calc(100% - 20px));
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .music-card b {
+    font-size: 10px;
+  }
+
+  .section-view,
+  .panel {
+    padding: 14px;
+  }
+
+  /* Phone player */
+  .player {
+    height: 72px !important;
+    grid-template-columns:
+      max-content
+      minmax(70px, 1fr)
+      max-content !important;
+    column-gap: 4px !important;
+    padding:
+      0
+      max(7px, env(safe-area-inset-right))
+      env(safe-area-inset-bottom)
+      max(7px, env(safe-area-inset-left)) !important;
+  }
+
+  .player-left .player-controls {
+    gap: 0 !important;
+  }
+
+  .player-left .player-controls > button {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  /* Keep the main playback action and hide less-important side controls. */
+  .player-left .player-controls > button:nth-child(1),
+  .player-left .player-controls > button:nth-last-child(1) {
+    display: none !important;
+  }
+
+  .player-left .player-controls > button.play {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  .player-left .player-controls > button.play svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .player > .player-seek {
+    grid-template-columns:
+      30px
+      minmax(45px, 1fr)
+      30px !important;
+    gap: 3px !important;
+  }
+
+  .player > .player-seek .player-time {
+    width: 30px !important;
+    min-width: 30px !important;
+    font-size: 7px !important;
+  }
+
+  .player > .player-seek .player-wave,
+  .player > .player-seek .player-wave-container {
+    height: 34px !important;
+  }
+
+  .player > .player-right {
+    gap: 1px !important;
+  }
+
+  .player > .player-right .player-action,
+  .player > .player-right .volume-button {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+  }
+
+  .player > .player-right .volume-control {
+    width: 34px !important;
+    min-width: 34px !important;
+  }
+
+  /* Expanded player stays inside small phone viewports. */
+  .player-expanded {
+    padding:
+      max(18px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+
+  .player-expanded .big-art {
+    width: min(70vw, 320px);
+    max-height: 38vh;
+  }
+
+  .player-expanded .now-title {
+    max-width: 94vw;
+    margin-top: 16px;
+  }
+
+  .player-expanded .now-title h2 {
+    font-size: clamp(22px, 7vw, 30px);
+  }
+
+  .player-expanded .expanded-seek {
+    width: min(94vw, 620px) !important;
+    grid-template-columns:
+      34px
+      minmax(90px, 1fr)
+      34px !important;
+    gap: 7px !important;
+  }
+
+  .player-expanded .expanded-time {
+    width: 34px !important;
+    min-width: 34px !important;
+    font-size: 8px !important;
+  }
+
+  .player-expanded .big-controls {
+    gap: 10px !important;
+    margin-top: 12px !important;
+  }
+
+  .player-expanded .big-controls button {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .player-expanded .big-controls .play-big {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  /* Portal shuffle menu stays safely inside phones/folds. */
+  body > .shuffle-menu {
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+/* Very narrow phone / folded-cover displays. */
+@media (max-width: 420px) {
+  .main {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .topbar {
+    gap: 6px;
+  }
+
+  .mobile-menu {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .player {
+    grid-template-columns:
+      max-content
+      minmax(52px, 1fr)
+      max-content !important;
+  }
+
+  .player-left .player-controls > button {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .player-left .player-controls > button.play {
+    width: 43px !important;
+    height: 43px !important;
+  }
+
+  .player > .player-seek .player-time {
+    display: none !important;
+  }
+
+  .player > .player-seek {
+    grid-template-columns: minmax(50px, 1fr) !important;
+  }
+
+  .player > .player-seek .player-wave {
+    width: 100% !important;
+  }
+
+  .player > .player-right .player-action,
+  .player > .player-right .volume-button {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .player-expanded .big-controls {
+    gap: 6px !important;
+  }
+
+  .player-expanded .big-controls button {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .player-expanded .big-controls .play-big {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+/* Foldables: adapt both closed and open/dual-pane orientations. */
+@media (min-width: 421px) and (max-width: 900px) and (max-height: 520px) {
+  .topbar {
+    height: 58px;
+  }
+
+  .hero {
+    padding-top: 14px;
+    padding-bottom: 10px;
+  }
+
+  .hero h1 {
+    font-size: clamp(30px, 6vw, 46px);
+  }
+
+  .canvas-wrap {
+    height: 310px;
+  }
+
+  .player {
+    --player-height: 68px;
+    height: 68px !important;
+  }
+
+  .player-expanded {
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .player-expanded .big-art {
+    width: min(38vw, 260px);
+    margin-top: 8px;
+  }
+
+  .player-expanded .now-title {
+    margin-top: 10px;
+  }
+
+  .player-expanded .big-controls {
+    margin-top: 8px;
+  }
+}
+
+/* Tall phones / foldables: use extra vertical space for the galaxy. */
+@media (max-width: 900px) and (min-height: 750px) {
+  .canvas-wrap {
+    height: min(58vh, 560px);
+  }
+}
+
+/* Landscape phones and small tablets. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .sidebar {
+    overflow-y: auto;
+  }
+
+  .hero {
+    padding-top: 16px;
+  }
+
+  .canvas-wrap {
+    height: 330px;
+  }
+
+  .player-expanded {
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .player-expanded .big-art {
+    width: min(32vw, 250px);
+  }
+}
+
+/* iOS safe-area aware bottom player. */
+@supports (padding: max(0px)) {
+  .player {
+    padding-bottom: max(
+      0px,
+      env(safe-area-inset-bottom)
+    );
+  }
+
+  .sidebar {
+    padding-left: max(
+      16px,
+      env(safe-area-inset-left)
+    );
+  }
+}
+
+/* Accessibility: preserve the existing visual design but stop hover-only
+   interactions from causing problems on coarse/touch pointers. */
+@media (hover: none) and (pointer: coarse) {
+  .music-card .card-art .card-play {
+    opacity: 1;
+    transform: none;
+  }
+
+  .player-controls button:hover,
+  .big-controls button:hover,
+  .shuffle-option:hover:not(:disabled) {
+    transform: none !important;
+  }
+
+  .track:hover,
+  .nav-item:hover,
+  .shuffle-option:hover:not(:disabled) {
+    background: inherit;
+  }
+
+  .music-card,
+  .track,
+  .nav-item,
+  .shuffle-option {
+    touch-action: manipulation;
+  }
+}
+
+/* TV / remote-friendly hit targets. */
+@media (min-width: 1800px) and (pointer: coarse) {
+  button {
+    min-height: 44px;
+  }
+
+  .nav-item,
+  .shuffle-option {
+    min-height: 48px;
+  }
+}
