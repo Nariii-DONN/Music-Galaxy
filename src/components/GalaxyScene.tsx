@@ -82,11 +82,29 @@ function GalaxyCamera() {
   const dragging =
     useRef(false)
 
+  const activePointers =
+    useRef(
+      new Map<
+        number,
+        { x: number; y: number }
+      >(),
+    )
+
   const pointer =
     useRef({
       x: 0,
       y: 0,
     })
+
+  const hover =
+    useRef({
+      x: 0,
+      y: 0,
+      active: false,
+    })
+
+  const pinchDistance =
+    useRef<number | null>(null)
 
   const targetYaw =
     useRef(0)
@@ -110,28 +128,173 @@ function GalaxyCamera() {
     const element =
       gl.domElement
 
+    element.style.touchAction = 'none'
+    element.style.cursor = 'grab'
+
+    const updateHover = (
+      event: PointerEvent,
+    ) => {
+      const rect =
+        element.getBoundingClientRect()
+
+      if (
+        rect.width <= 0 ||
+        rect.height <= 0
+      ) {
+        return
+      }
+
+      hover.current.x =
+        THREE.MathUtils.clamp(
+          (
+            (event.clientX -
+              rect.left) /
+              rect.width -
+            0.5
+          ) * 2,
+          -1,
+          1,
+        )
+
+      /*
+       * Y is inverted so moving the pointer
+       * upward produces the natural camera lift.
+       */
+      hover.current.y =
+        THREE.MathUtils.clamp(
+          (
+            0.5 -
+            (event.clientY -
+              rect.top) /
+              rect.height
+          ) * 2,
+          -1,
+          1,
+        )
+
+      hover.current.active = true
+    }
+
     const onPointerDown = (
       event: PointerEvent,
     ) => {
-      dragging.current = true
+      activePointers.current.set(
+        event.pointerId,
+        {
+          x: event.clientX,
+          y: event.clientY,
+        },
+      )
 
-      pointer.current = {
-        x: event.clientX,
-        y: event.clientY,
+      if (
+        activePointers.current.size === 1
+      ) {
+        dragging.current = true
+
+        pointer.current = {
+          x: event.clientX,
+          y: event.clientY,
+        }
+
+        element.style.cursor = 'grabbing'
+
+        try {
+          element.setPointerCapture(
+            event.pointerId,
+          )
+        } catch {
+          // Ignore.
+        }
+
+        return
       }
 
-      try {
-        element.setPointerCapture(
-          event.pointerId,
-        )
-      } catch {
-        // Ignore.
+      /*
+       * Two pointers = pinch mode.
+       * Do not rotate while pinching.
+       */
+      if (
+        activePointers.current.size === 2
+      ) {
+        dragging.current = false
+
+        const points =
+          Array.from(
+            activePointers.current.values(),
+          )
+
+        const dx =
+          points[1].x -
+          points[0].x
+
+        const dy =
+          points[1].y -
+          points[0].y
+
+        pinchDistance.current =
+          Math.hypot(dx, dy)
       }
     }
 
     const onPointerMove = (
       event: PointerEvent,
     ) => {
+      activePointers.current.set(
+        event.pointerId,
+        {
+          x: event.clientX,
+          y: event.clientY,
+        },
+      )
+
+      if (
+        event.pointerType === 'mouse'
+      ) {
+        updateHover(event)
+      }
+
+      if (
+        activePointers.current.size === 2
+      ) {
+        const points =
+          Array.from(
+            activePointers.current.values(),
+          )
+
+        const dx =
+          points[1].x -
+          points[0].x
+
+        const dy =
+          points[1].y -
+          points[0].y
+
+        const nextDistance =
+          Math.hypot(dx, dy)
+
+        if (
+          pinchDistance.current !==
+          null
+        ) {
+          const delta =
+            pinchDistance.current -
+            nextDistance
+
+          targetDistance.current =
+            THREE.MathUtils.clamp(
+              targetDistance.current +
+                delta * 0.018,
+              7,
+              18,
+            )
+        }
+
+        pinchDistance.current =
+          nextDistance
+
+        return
+      }
+
       if (
         !dragging.current
       ) {
@@ -151,22 +314,70 @@ function GalaxyCamera() {
         y: event.clientY,
       }
 
+      const sensitivity =
+        event.pointerType === 'touch'
+          ? 0.0032
+          : 0.0025
+
       targetYaw.current +=
-        dx * 0.0025
+        dx * sensitivity
 
       targetPitch.current =
         THREE.MathUtils.clamp(
           targetPitch.current +
-            dy * 0.0015,
+            dy *
+              (event.pointerType === 'touch'
+                ? 0.0018
+                : 0.0015),
           -0.7,
           0.7,
         )
+
+      if (
+        event.pointerType === 'touch'
+      ) {
+        hover.current.x = 0
+        hover.current.y = 0
+        hover.current.active = false
+      }
     }
 
     const onPointerUp = (
       event: PointerEvent,
     ) => {
-      dragging.current = false
+      activePointers.current.delete(
+        event.pointerId,
+      )
+
+      if (
+        activePointers.current.size <
+        2
+      ) {
+        pinchDistance.current =
+          null
+      }
+
+      dragging.current =
+        activePointers.current.size ===
+        1
+
+      if (
+        dragging.current
+      ) {
+        const points =
+          Array.from(
+            activePointers.current.values(),
+          )
+
+        if (points[0]) {
+          pointer.current = {
+            x: points[0].x,
+            y: points[0].y,
+          }
+        }
+      } else {
+        element.style.cursor = 'grab'
+      }
 
       try {
         element.releasePointerCapture(
@@ -174,6 +385,18 @@ function GalaxyCamera() {
         )
       } catch {
         // Ignore.
+      }
+    }
+
+    const onPointerLeave = (
+      event: PointerEvent,
+    ) => {
+      if (
+        event.pointerType === 'mouse'
+      ) {
+        hover.current.x = 0
+        hover.current.y = 0
+        hover.current.active = false
       }
     }
 
@@ -212,6 +435,11 @@ function GalaxyCamera() {
     )
 
     element.addEventListener(
+      'pointerleave',
+      onPointerLeave,
+    )
+
+    element.addEventListener(
       'wheel',
       onWheel,
       {
@@ -241,9 +469,16 @@ function GalaxyCamera() {
       )
 
       element.removeEventListener(
+        'pointerleave',
+        onPointerLeave,
+      )
+
+      element.removeEventListener(
         'wheel',
         onWheel,
       )
+
+      activePointers.current.clear()
     }
   }, [gl])
 
@@ -297,6 +532,19 @@ function GalaxyCamera() {
        * Deep bass gently moves the
        * camera inward.
        */
+      /*
+       * Mouse hover is an additional subtle parallax input.
+       * It never replaces drag rotation, and it fades back
+       * to neutral when the pointer leaves the Galaxy.
+       */
+      const hoverYaw =
+        hover.current.x *
+        (hover.current.active ? 0.08 : 0)
+
+      const hoverPitch =
+        hover.current.y *
+        (hover.current.active ? 0.055 : 0)
+
       const targetCameraDistance =
         targetDistance.current -
         bands.sub * 0.55 -
@@ -313,22 +561,30 @@ function GalaxyCamera() {
       const radius =
         distance.current
 
+      const cameraYaw =
+        yaw.current +
+        hoverYaw
+
+      const cameraPitch =
+        pitch.current +
+        hoverPitch
+
       const x =
         Math.sin(
-          yaw.current,
+          cameraYaw,
         ) *
         radius
 
       const z =
         Math.cos(
-          yaw.current,
+          cameraYaw,
         ) *
         radius
 
       const y =
         1.5 +
         Math.sin(
-          pitch.current,
+          cameraPitch,
         ) *
           2.4 +
         bands.lowMid *

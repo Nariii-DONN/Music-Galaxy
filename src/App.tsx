@@ -1314,10 +1314,127 @@ export default function App() {
   const [shuffleMenuOpen, setShuffleMenuOpen] = useState(false)
   const [shuffleMenuAnchor, setShuffleMenuAnchor] = useState<DOMRect | null>(null)
 
+  const [volumePopoverOpen, setVolumePopoverOpen] = useState(false)
+  const [coarsePointer, setCoarsePointer] = useState(false)
+
+  const volumeControlRef =
+    useRef<HTMLDivElement | null>(null)
+
+  const previousVolumeRef =
+    useRef(
+      audioState.volume > 0
+        ? audioState.volume
+        : 0.72,
+    )
+
 
   /* ========================================================================
      AUDIO STATE
      ======================================================================== */
+
+
+  useEffect(() => {
+    const mediaQuery =
+      window.matchMedia(
+        '(pointer: coarse)',
+      )
+
+    const updatePointerMode = () => {
+      setCoarsePointer(
+        mediaQuery.matches ||
+          navigator.maxTouchPoints > 0,
+      )
+    }
+
+    updatePointerMode()
+    mediaQuery.addEventListener?.(
+      'change',
+      updatePointerMode,
+    )
+
+    return () => {
+      mediaQuery.removeEventListener?.(
+        'change',
+        updatePointerMode,
+      )
+    }
+  }, [])
+
+
+  useEffect(() => {
+    if (
+      audioState.volume > 0 &&
+      !audioState.muted
+    ) {
+      previousVolumeRef.current =
+        audioState.volume
+    }
+  }, [
+    audioState.volume,
+    audioState.muted,
+  ])
+
+
+  useEffect(() => {
+    if (
+      !volumePopoverOpen ||
+      !coarsePointer
+    ) {
+      return
+    }
+
+    const handlePointerDown = (
+      event: PointerEvent,
+    ) => {
+      const target =
+        event.target as Node
+
+      if (
+        volumeControlRef.current &&
+        !volumeControlRef.current.contains(
+          target,
+        )
+      ) {
+        setVolumePopoverOpen(false)
+      }
+    }
+
+    const handleKeyDown = (
+      event: KeyboardEvent,
+    ) => {
+      if (
+        event.key === 'Escape'
+      ) {
+        setVolumePopoverOpen(false)
+      }
+    }
+
+    document.addEventListener(
+      'pointerdown',
+      handlePointerDown,
+    )
+
+    document.addEventListener(
+      'keydown',
+      handleKeyDown,
+    )
+
+    return () => {
+      document.removeEventListener(
+        'pointerdown',
+        handlePointerDown,
+      )
+
+      document.removeEventListener(
+        'keydown',
+        handleKeyDown,
+      )
+    }
+  }, [
+    volumePopoverOpen,
+    coarsePointer,
+  ])
+
 
   useEffect(() => {
     const unsubscribe =
@@ -1934,6 +2051,25 @@ export default function App() {
 
 
   const toggleMute = () => {
+    audioEngine.toggleMute()
+  }
+
+
+  const handleVolumeButton = () => {
+    /*
+     * Phones/tablets: first tap opens the upward
+     * volume slider. While it is already open,
+     * tapping the same button mutes/restores volume.
+     *
+     * Desktop/laptop: direct mute/restore only.
+     */
+    if (coarsePointer) {
+      if (!volumePopoverOpen) {
+        setVolumePopoverOpen(true)
+        return
+      }
+    }
+
     audioEngine.toggleMute()
   }
 
@@ -4985,11 +5121,18 @@ export default function App() {
           </motion.button>
 
 
-          <div className="volume-control">
+          <div
+            className={
+              volumePopoverOpen
+                ? 'volume-control is-open'
+                : 'volume-control'
+            }
+            ref={volumeControlRef}
+          >
 
             <button
               className="volume-button"
-              onClick={toggleMute}
+              onClick={handleVolumeButton}
               aria-label={
                 muted || volume === 0
                   ? 'Unmute'
@@ -5036,6 +5179,91 @@ export default function App() {
               </span>
 
             </div>
+
+
+            <AnimatePresence>
+              {coarsePointer &&
+                volumePopoverOpen && (
+                  <motion.div
+                    className="volume-mobile-popover"
+                    initial={{
+                      opacity: 0,
+                      y: 10,
+                      scale: 0.96,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: 10,
+                      scale: 0.96,
+                    }}
+                    transition={{
+                      duration: 0.16,
+                      ease: 'easeOut',
+                    }}
+                    onPointerDown={(event) =>
+                      event.stopPropagation()
+                    }
+                    role="dialog"
+                    aria-label="Volume controls"
+                  >
+                    <div className="volume-mobile-value">
+                      {muted ? 0 : volume}%
+                    </div>
+
+                    <input
+                      className="volume-mobile-slider"
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={
+                        muted
+                          ? 0
+                          : volume
+                      }
+                      style={
+                        {
+                          '--volume-fill':
+                            `${muted ? 0 : volume}%`,
+                        } as CSSProperties
+                      }
+                      onChange={handleVolume}
+                      aria-label="Volume"
+                    />
+
+                    <button
+                      className="volume-mobile-mute"
+                      type="button"
+                      onClick={() =>
+                        audioEngine.toggleMute()
+                      }
+                      aria-label={
+                        muted ||
+                        volume === 0
+                          ? 'Restore volume'
+                          : 'Mute'
+                      }
+                      title={
+                        muted ||
+                        volume === 0
+                          ? 'Restore volume'
+                          : 'Mute'
+                      }
+                    >
+                      {muted ||
+                      volume === 0 ? (
+                        <Volume2 size={17} />
+                      ) : (
+                        <VolumeX size={17} />
+                      )}
+                    </button>
+                  </motion.div>
+                )}
+            </AnimatePresence>
 
           </div>
 
