@@ -5402,789 +5402,162 @@ body > .shuffle-menu .shuffle-option-copy small {
 }
 
 /* ==========================================================================
-   MUSIC GALAXY — UNIVERSAL RESPONSIVE SYSTEM
-   Android / iOS / smartphones / foldables / tablets / laptops / desktops / TV
+   FINAL DEVICE FIXES — MOBILE VOLUME + SHUFFLE BALANCED WIDTH
+   Keep existing warnings/compatibility declarations untouched.
    ========================================================================== */
 
-:root {
-  --player-height: 84px;
-  --content-gutter: clamp(12px, 2vw, 32px);
-  --touch-target: 44px;
-}
+/* --------------------------------------------------------------------------
+   MOBILE VOLUME BUTTON
+   -------------------------------------------------------------------------- */
 
-html {
-  width: 100%;
-  min-width: 320px;
-  background: #03040d;
-  overflow-x: hidden;
-}
-
-body {
-  width: 100%;
-  min-width: 320px;
-  overflow-x: hidden;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-#root,
-.app {
-  width: 100%;
-  max-width: 100%;
-  min-height: 100dvh;
-}
-
-/* Prevent accidental horizontal overflow from long titles/content. */
-.main,
-.panel,
-.section-view,
-.content-grid,
-.playlist-layout,
-.playlist-detail,
-.playlist-sidebar,
-.track,
-.track-main,
-.player,
-.player-left,
-.player-seek,
-.player-right,
-.hero,
-.section-heading,
-.cards {
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* Touch-friendly controls without making desktop UI oversized. */
-button,
-input,
-label {
-  -webkit-tap-highlight-color: transparent;
-}
-
-@media (min-width: 1600px) {
-  .main {
-    max-width: 1800px;
-    padding-left: clamp(28px, 2.2vw, 48px);
-    padding-right: clamp(28px, 2.2vw, 48px);
-  }
-
-  .hero {
-    padding-top: clamp(42px, 3vw, 70px);
-    padding-bottom: clamp(26px, 2vw, 36px);
-  }
-
-  .hero h1 {
-    font-size: clamp(64px, 4vw, 92px);
-  }
-
-  .canvas-wrap {
-    height: clamp(520px, 46vh, 720px);
-  }
-
-  .cards {
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  }
-}
-
-/* Large desktop / TV browser sizes. */
-@media (min-width: 2200px) {
-  .sidebar {
-    width: 270px;
-  }
-
-  .main {
-    margin-left: 270px;
-    max-width: 2200px;
-    padding-bottom: 140px;
-  }
-
-  .brand {
-    font-size: 22px;
-  }
-
-  .nav-item {
-    min-height: 48px;
-    font-size: 14px;
-  }
-
-  .hero h1 {
-    font-size: clamp(78px, 4vw, 110px);
-  }
-
-  .hero p {
-    font-size: 15px;
-    max-width: 760px;
-  }
-
-  .canvas-wrap {
-    height: min(700px, 58vh);
-  }
-
-  .player {
-    height: 96px;
-  }
-
-  .player-left .player-controls > button {
-    width: 44px;
-    height: 44px;
-  }
-
-  .player-left .player-controls > button.play {
-    width: 60px;
-    height: 60px;
-  }
-
-  .player > .player-seek .player-time {
-    font-size: 12px;
-  }
-
-  .player-right .volume-control {
-    width: 180px !important;
-    min-width: 180px !important;
-  }
-}
-
-/* Laptop / compact desktop. */
-@media (max-width: 1180px) {
-  .sidebar {
-    width: 210px;
-  }
-
-  .main {
-    margin-left: 210px;
-    padding-left: 18px;
-    padding-right: 18px;
-  }
-
-  .hero {
-    gap: 24px;
-  }
-
-  .hero-copy {
-    max-width: min(670px, 72vw);
-  }
-
-  .player {
-    grid-template-columns:
-      minmax(330px, 0.9fr)
-      minmax(220px, 1.5fr)
-      minmax(150px, 0.5fr) !important;
-    column-gap: 12px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-  }
-
-  .player-left {
-    gap: 10px !important;
-  }
-
-  .player-left .current {
-    min-width: 105px !important;
-    max-width: 170px !important;
-  }
-
-  .player-left .player-controls {
-    gap: 2px !important;
-  }
-
-  .player-left .player-controls > button {
-    width: 34px !important;
-    height: 34px !important;
-  }
-
-  .player-left .player-controls > button.play {
-    width: 46px !important;
-    height: 46px !important;
-  }
-
-  .player > .player-right .volume-control {
-    width: 118px !important;
-    min-width: 118px !important;
-  }
-}
-
-/* Tablet landscape / portrait, including iPad and Android tablets. */
-@media (max-width: 900px) {
-  .sidebar {
-    width: 220px;
-    transform: translateX(-100%);
-    transition: transform 220ms ease;
-    z-index: 80;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .main {
-    margin-left: 0;
-    padding-left: max(14px, env(safe-area-inset-left));
-    padding-right: max(14px, env(safe-area-inset-right));
-    padding-bottom: calc(var(--player-height) + 24px);
-  }
-
-  .mobile-menu {
-    width: var(--touch-target);
-    height: var(--touch-target);
-    display: grid;
-    place-items: center;
-    flex: 0 0 var(--touch-target);
-  }
-
-  .topbar {
-    height: 70px;
-    gap: 10px;
-  }
-
-  .search-wrapper {
-    width: auto;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .top-actions {
-    flex: 0 0 auto;
-  }
-
-  .top-actions .icon-btn,
-  .top-actions .publish {
-    display: none;
-  }
-
-  .hero {
-    align-items: flex-start;
-    flex-direction: column;
-    padding-top: 28px;
-  }
-
-  .hero-copy {
-    max-width: 100%;
-  }
-
-  .hero h1 {
-    font-size: clamp(42px, 8vw, 66px);
-  }
-
-  .stats {
-    display: flex;
-    gap: 24px;
-  }
-
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .cards {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-
-  .playlist-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .playlist-sidebar {
-    max-height: 250px;
-    overflow-y: auto;
-  }
-
-  /* Compact but complete player: controls | seeker | actions. */
-  .player {
-    --player-height: 76px;
-    height: var(--player-height) !important;
-    grid-template-columns:
-      max-content
-      minmax(120px, 1fr)
-      max-content !important;
-    column-gap: 10px !important;
-    padding:
-      0
-      max(10px, env(safe-area-inset-right))
-      0
-      max(10px, env(safe-area-inset-left)) !important;
-  }
-
-  .current {
-    display: none !important;
-  }
-
-  .player-left {
-    width: max-content !important;
-    gap: 2px !important;
-  }
-
-  .player-left .player-controls {
-    gap: 1px !important;
-  }
-
-  .player-left .player-controls > button {
-    width: 40px !important;
-    height: 40px !important;
-  }
-
-  .player-left .player-controls > button.play {
-    width: 50px !important;
-    height: 50px !important;
-  }
-
-  .player > .player-seek {
-    grid-template-columns:
-      34px
-      minmax(60px, 1fr)
-      34px !important;
-    gap: 5px !important;
-  }
-
-  .player > .player-seek .player-time {
-    width: 34px !important;
-    min-width: 34px !important;
-    font-size: 8px !important;
-  }
-
+/* Always keep the volume control usable on touch devices. */
+@media (max-width: 680px) {
   .player > .player-right {
     width: max-content !important;
-    min-width: 0 !important;
-    gap: 4px !important;
+    min-width: max-content !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 0 0 auto !important;
+    gap: 3px !important;
   }
 
   .player > .player-right .volume-control {
-    width: 38px !important;
-    min-width: 38px !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 36px !important;
     padding: 0 !important;
     border: 0 !important;
     background: transparent !important;
   }
 
-  .player > .player-right .volume-slider-wrap {
-    display: none !important;
-  }
-
-  .player > .player-right .player-action,
   .player > .player-right .volume-button {
-    width: 40px !important;
-    height: 40px !important;
-  }
-
-  .canvas-wrap {
-    height: clamp(360px, 52vh, 600px);
-  }
-}
-
-/* Narrow tablets / large phones / foldables. */
-@media (max-width: 680px) {
-  :root {
-    --player-height: 72px;
-  }
-
-  .main {
-    padding-left: max(10px, env(safe-area-inset-left));
-    padding-right: max(10px, env(safe-area-inset-right));
-    padding-bottom: calc(var(--player-height) + 18px);
-  }
-
-  .topbar {
-    height: 64px;
-  }
-
-  .search {
-    height: 40px;
-  }
-
-  .hero {
-    padding:
-      20px
-      2px
-      14px;
-  }
-
-  .hero h1 {
-    font-size: clamp(36px, 10vw, 48px);
-    letter-spacing: -2.2px;
-  }
-
-  .hero p {
-    font-size: 11px;
-  }
-
-  .stats {
-    display: none;
-  }
-
-  .hero-actions {
-    flex-wrap: wrap;
-  }
-
-  .hero-actions .ghost {
-    display: none;
-  }
-
-  .galaxy-toolbar {
-    height: 58px;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .galaxy-toolbar span {
-    display: none;
-  }
-
-  .canvas-wrap {
-    height: 400px;
-  }
-
-  .planet-tooltip {
-    left: 10px;
-    bottom: 10px;
-    min-width: 0;
-    width: min(260px, calc(100% - 20px));
-  }
-
-  .cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .music-card b {
-    font-size: 10px;
-  }
-
-  .section-view,
-  .panel {
-    padding: 14px;
-  }
-
-  /* Phone player */
-  .player {
-    height: 72px !important;
-    grid-template-columns:
-      max-content
-      minmax(70px, 1fr)
-      max-content !important;
-    column-gap: 4px !important;
-    padding:
-      0
-      max(7px, env(safe-area-inset-right))
-      env(safe-area-inset-bottom)
-      max(7px, env(safe-area-inset-left)) !important;
-  }
-
-  .player-left .player-controls {
-    gap: 0 !important;
-  }
-
-  .player-left .player-controls > button {
-    width: 34px !important;
-    height: 34px !important;
-  }
-
-  /* Keep the main playback action and hide less-important side controls. */
-  .player-left .player-controls > button:nth-child(1),
-  .player-left .player-controls > button:nth-last-child(1) {
-    display: none !important;
-  }
-
-  .player-left .player-controls > button.play {
-    width: 46px !important;
-    height: 46px !important;
-  }
-
-  .player-left .player-controls > button.play svg {
-    width: 21px !important;
-    height: 21px !important;
-  }
-
-  .player > .player-seek {
-    grid-template-columns:
-      30px
-      minmax(45px, 1fr)
-      30px !important;
-    gap: 3px !important;
-  }
-
-  .player > .player-seek .player-time {
-    width: 30px !important;
-    min-width: 30px !important;
-    font-size: 7px !important;
-  }
-
-  .player > .player-seek .player-wave,
-  .player > .player-seek .player-wave-container {
-    height: 34px !important;
-  }
-
-  .player > .player-right {
-    gap: 1px !important;
-  }
-
-  .player > .player-right .player-action,
-  .player > .player-right .volume-button {
-    width: 34px !important;
-    height: 34px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
     border-radius: 9px !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
-  .player > .player-right .volume-control {
-    width: 34px !important;
-    min-width: 34px !important;
-  }
-
-  /* Expanded player stays inside small phone viewports. */
-  .player-expanded {
-    padding:
-      max(18px, env(safe-area-inset-top))
-      max(12px, env(safe-area-inset-right))
-      max(18px, env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-  }
-
-  .player-expanded .big-art {
-    width: min(70vw, 320px);
-    max-height: 38vh;
-  }
-
-  .player-expanded .now-title {
-    max-width: 94vw;
-    margin-top: 16px;
-  }
-
-  .player-expanded .now-title h2 {
-    font-size: clamp(22px, 7vw, 30px);
-  }
-
-  .player-expanded .expanded-seek {
-    width: min(94vw, 620px) !important;
-    grid-template-columns:
-      34px
-      minmax(90px, 1fr)
-      34px !important;
-    gap: 7px !important;
-  }
-
-  .player-expanded .expanded-time {
-    width: 34px !important;
-    min-width: 34px !important;
-    font-size: 8px !important;
-  }
-
-  .player-expanded .big-controls {
-    gap: 10px !important;
-    margin-top: 12px !important;
-  }
-
-  .player-expanded .big-controls button {
-    width: 38px !important;
-    height: 38px !important;
-  }
-
-  .player-expanded .big-controls .play-big {
-    width: 56px !important;
-    height: 56px !important;
-  }
-
-  /* Portal shuffle menu stays safely inside phones/folds. */
-  body > .shuffle-menu {
-    max-width: calc(100vw - 16px) !important;
-  }
-}
-
-/* Very narrow phone / folded-cover displays. */
-@media (max-width: 420px) {
-  .main {
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-
-  .topbar {
-    gap: 6px;
-  }
-
-  .mobile-menu {
-    width: 38px;
-    height: 38px;
-    flex-basis: 38px;
-  }
-
-  .cards {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .player {
-    grid-template-columns:
-      max-content
-      minmax(52px, 1fr)
-      max-content !important;
-  }
-
-  .player-left .player-controls > button {
-    width: 31px !important;
-    height: 31px !important;
-  }
-
-  .player-left .player-controls > button.play {
-    width: 43px !important;
-    height: 43px !important;
-  }
-
-  .player > .player-seek .player-time {
+  /* Hide only the slider/value to preserve space; the volume button remains. */
+  .player > .player-right .volume-slider-wrap,
+  .player > .player-right .volume-value {
     display: none !important;
   }
 
-  .player > .player-seek {
-    grid-template-columns: minmax(50px, 1fr) !important;
+  .player > .player-right .volume-button svg {
+    width: 18px !important;
+    height: 18px !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .player > .player-right {
+    gap: 2px !important;
   }
 
-  .player > .player-seek .player-wave {
-    width: 100% !important;
-  }
-
-  .player > .player-right .player-action,
+  .player > .player-right .volume-control,
   .player > .player-right .volume-button {
-    width: 31px !important;
-    height: 31px !important;
-  }
-
-  .player-expanded .big-controls {
-    gap: 6px !important;
-  }
-
-  .player-expanded .big-controls button {
     width: 34px !important;
+    min-width: 34px !important;
+    flex-basis: 34px !important;
+  }
+
+  .player > .player-right .volume-button {
     height: 34px !important;
-  }
-
-  .player-expanded .big-controls .play-big {
-    width: 52px !important;
-    height: 52px !important;
+    min-height: 34px !important;
   }
 }
 
-/* Foldables: adapt both closed and open/dual-pane orientations. */
-@media (min-width: 421px) and (max-width: 900px) and (max-height: 520px) {
-  .topbar {
-    height: 58px;
-  }
+/* --------------------------------------------------------------------------
+   SHUFFLE MENU
+   Required geometry:
+   border → equal space → content → equal space → border
+   The longest option determines the popup width.
+   Works for normal + extended player because the menu is a body-level portal.
+   -------------------------------------------------------------------------- */
 
-  .hero {
-    padding-top: 14px;
-    padding-bottom: 10px;
-  }
+body > .shuffle-menu {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 20px) !important;
 
-  .hero h1 {
-    font-size: clamp(30px, 6vw, 46px);
-  }
+  padding: 7px !important;
+  box-sizing: border-box !important;
 
-  .canvas-wrap {
-    height: 310px;
-  }
-
-  .player {
-    --player-height: 68px;
-    height: 68px !important;
-  }
-
-  .player-expanded {
-    overflow-y: auto;
-    justify-content: flex-start;
-  }
-
-  .player-expanded .big-art {
-    width: min(38vw, 260px);
-    margin-top: 8px;
-  }
-
-  .player-expanded .now-title {
-    margin-top: 10px;
-  }
-
-  .player-expanded .big-controls {
-    margin-top: 8px;
-  }
+  overflow: visible !important;
 }
 
-/* Tall phones / foldables: use extra vertical space for the galaxy. */
-@media (max-width: 900px) and (min-height: 750px) {
-  .canvas-wrap {
-    height: min(58vh, 560px);
-  }
+/* Each option is exactly as wide as its own contents. */
+body > .shuffle-menu .shuffle-option {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 34px) !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  padding: 8px !important;
+  gap: 9px !important;
+
+  box-sizing: border-box !important;
 }
 
-/* Landscape phones and small tablets. */
-@media (orientation: landscape) and (max-height: 600px) {
-  .sidebar {
-    overflow-y: auto;
-  }
-
-  .hero {
-    padding-top: 16px;
-  }
-
-  .canvas-wrap {
-    height: 330px;
-  }
-
-  .player-expanded {
-    overflow-y: auto;
-    justify-content: flex-start;
-  }
-
-  .player-expanded .big-art {
-    width: min(32vw, 250px);
-  }
+/* Do not let flex-grow create empty space after the longest label. */
+body > .shuffle-menu .shuffle-option-copy {
+  width: max-content !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
 }
 
-/* iOS safe-area aware bottom player. */
-@supports (padding: max(0px)) {
-  .player {
-    padding-bottom: max(
-      0px,
-      env(safe-area-inset-bottom)
-    );
-  }
-
-  .sidebar {
-    padding-left: max(
-      16px,
-      env(safe-area-inset-left)
-    );
-  }
+/* Keep text on one line so the longest option defines the menu width. */
+body > .shuffle-menu .shuffle-option-copy b,
+body > .shuffle-menu .shuffle-option-copy small {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
-/* Accessibility: preserve the existing visual design but stop hover-only
-   interactions from causing problems on coarse/touch pointers. */
-@media (hover: none) and (pointer: coarse) {
-  .music-card .card-art .card-play {
-    opacity: 1;
-    transform: none;
-  }
-
-  .player-controls button:hover,
-  .big-controls button:hover,
-  .shuffle-option:hover:not(:disabled) {
-    transform: none !important;
-  }
-
-  .track:hover,
-  .nav-item:hover,
-  .shuffle-option:hover:not(:disabled) {
-    background: inherit;
-  }
-
-  .music-card,
-  .track,
-  .nav-item,
-  .shuffle-option {
-    touch-action: manipulation;
-  }
+/* Keep icons fixed and prevent them from changing the measured width. */
+body > .shuffle-menu .shuffle-option-icon {
+  flex: 0 0 30px !important;
+  width: 30px !important;
+  height: 30px !important;
 }
 
-/* TV / remote-friendly hit targets. */
-@media (min-width: 1800px) and (pointer: coarse) {
-  button {
-    min-height: 44px;
+/* The final option should not create extra width of its own. */
+body > .shuffle-menu .shuffle-option > svg:last-child {
+  flex: 0 0 auto !important;
+  margin-left: 0 !important;
+}
+
+/* Maintain the same geometry on phones/foldables. */
+@media (max-width: 680px) {
+  body > .shuffle-menu {
+    width: max-content !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 16px) !important;
+    padding: 6px !important;
   }
 
-  .nav-item,
-  .shuffle-option {
-    min-height: 48px;
+  body > .shuffle-menu .shuffle-option {
+    width: max-content !important;
+    max-width: calc(100vw - 28px) !important;
+    padding: 8px !important;
   }
 }
