@@ -1,46 +1,317 @@
-import type { MusicProvider, Track } from '../lib/types'
+import type {
+  MusicProvider,
+  Track,
+} from '../lib/types'
 
-const API = 'https://api.audius.co/v1'
-const key = import.meta.env.VITE_AUDIUS_API_KEY as string | undefined
+const API =
+  'https://api.audius.co/v1'
+
+const key =
+  import.meta.env
+    .VITE_AUDIUS_API_KEY as
+    | string
+    | undefined
+
 
 function headers(): HeadersInit {
-  if (!key) return {}
-  return { 'X-API-Key': key }
-}
+  if (!key) {
+    return {}
+  }
 
-function map(t: any): Track {
-  const seconds = Number(t.duration || 0)
-  const m = Math.floor(seconds / 60)
-  const s = String(seconds % 60).padStart(2, '0')
   return {
-    id: `audius:${t.id}`,
-    provider: 'audius', providerId: t.id,
-    title: t.title || 'Untitled', artist: t.user?.name || 'Unknown artist',
-    album: t.album?.albumTitle || 'Single', genre: t.genre || 'Unknown',
-    mood: t.mood || 'Open', color: '#7c3aed', duration: seconds,
-    durationLabel: `${m}:${s}`, artworkUrl: t.artwork?._480x480 || t.artwork?._150x150,
-    permalink: t.permalink, license: t.license, downloadable: t.downloadable,
-    tags: t.tags || [], bpm: t.bpm,
+    'X-API-Key': key,
   }
 }
 
-async function get(path: string) {
-  const r = await fetch(`${API}${path}`, { headers: headers() })
-  if (!r.ok) throw new Error(`Audius ${r.status}`)
-  return r.json()
+
+/* ==========================================================================
+   ARTWORK
+   ========================================================================== */
+
+function getArtwork(
+  track: any,
+): string | undefined {
+  const artwork =
+    track?.artwork
+
+  if (
+    !artwork
+  ) {
+    return undefined
+  }
+
+  /*
+   * Audius currently returns keys such as:
+   *
+   * 150x150
+   * 480x480
+   * 1000x1000
+   *
+   * NOT:
+   *
+   * _150x150
+   * _480x480
+   */
+
+  if (
+    typeof artwork ===
+    'string'
+  ) {
+    return artwork
+  }
+
+  return (
+    artwork['1000x1000'] ||
+    artwork['480x480'] ||
+    artwork['150x150'] ||
+    artwork._1000x1000 ||
+    artwork._480x480 ||
+    artwork._150x150 ||
+    undefined
+  )
 }
 
-export const audiusProvider: MusicProvider = {
-  id: 'audius', name: 'Audius',
-  async search(q) {
-    const data = await get(`/tracks/search?query=${encodeURIComponent(q)}&limit=30`)
-    return (data.data || []).filter((x:any) => x.isStreamable !== false).map(map)
-  },
-  async trending() {
-    const data = await get('/tracks/trending?limit=30&time=week')
-    return (data.data || []).filter((x:any) => x.isStreamable !== false).map(map)
-  },
-  async stream(track) {
-    return `${API}/tracks/${encodeURIComponent(track.providerId)}/stream`
-  },
+
+/* ==========================================================================
+   TAGS
+   ========================================================================== */
+
+function getTags(
+  value: unknown,
+): string[] {
+  if (
+    Array.isArray(value)
+  ) {
+    return value
+      .map(String)
+      .map(
+        (tag) =>
+          tag.trim(),
+      )
+      .filter(Boolean)
+  }
+
+  if (
+    typeof value ===
+    'string'
+  ) {
+    return value
+      .split(',')
+      .map(
+        (tag) =>
+          tag.trim(),
+      )
+      .filter(Boolean)
+  }
+
+  return []
 }
+
+
+/* ==========================================================================
+   TRACK MAPPER
+   ========================================================================== */
+
+function map(
+  track: any,
+): Track {
+  const seconds =
+    Number(
+      track?.duration ||
+        0,
+    )
+
+  const minutes =
+    Math.floor(
+      seconds / 60,
+    )
+
+  const remaining =
+    Math.floor(
+      seconds % 60,
+    )
+
+  const artwork =
+    getArtwork(track)
+
+  const tags =
+    getTags(
+      track?.tags,
+    )
+
+  return {
+    id:
+      `audius:${track.id}`,
+
+    provider:
+      'audius',
+
+    providerId:
+      String(
+        track.id,
+      ),
+
+    title:
+      track.title ||
+      'Untitled',
+
+    artist:
+      track.user?.name ||
+      'Unknown artist',
+
+    album:
+      track.album?.albumTitle ||
+      'Single',
+
+    genre:
+      track.genre ||
+      'Unknown',
+
+    mood:
+      track.mood ||
+      'Open',
+
+    color:
+      '#7c3aed',
+
+    duration:
+      seconds,
+
+    durationLabel:
+      `${minutes}:${String(
+        remaining,
+      ).padStart(
+        2,
+        '0',
+      )}`,
+
+    /*
+     * THIS IS THE IMPORTANT FIX.
+     */
+    artworkUrl:
+      artwork,
+
+    permalink:
+      track.permalink,
+
+    license:
+      track.license,
+
+    downloadable:
+      Boolean(
+        track.is_downloadable ??
+        track.downloadable,
+      ),
+
+    tags,
+
+    bpm:
+      Number(
+        track.bpm || 0,
+      ) ||
+      undefined,
+
+    streamUrl:
+      undefined,
+  }
+}
+
+
+/* ==========================================================================
+   REQUEST
+   ========================================================================== */
+
+async function get(
+  path: string,
+): Promise<any> {
+  const response =
+    await fetch(
+      `${API}${path}`,
+      {
+        headers:
+          headers(),
+      },
+    )
+
+  if (
+    !response.ok
+  ) {
+    throw new Error(
+      `Audius ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+
+/* ==========================================================================
+   PROVIDER
+   ========================================================================== */
+
+export const audiusProvider:
+  MusicProvider = {
+    id: 'audius',
+
+    name: 'Audius',
+
+    async search(
+      query: string,
+    ): Promise<Track[]> {
+      const data =
+        await get(
+          `/tracks/search?query=${encodeURIComponent(
+            query,
+          )}&limit=30`,
+        )
+
+      return (
+        data.data || []
+      )
+        .filter(
+          (
+            track: any,
+          ) =>
+            track.is_streamable !==
+              false &&
+            track.is_available !==
+              false,
+        )
+        .map(map)
+    },
+
+    async trending(): Promise<Track[]> {
+      const data =
+        await get(
+          '/tracks/trending?limit=30&time=week',
+        )
+
+      return (
+        data.data || []
+      )
+        .filter(
+          (
+            track: any,
+          ) =>
+            track.is_streamable !==
+              false &&
+            track.is_available !==
+              false,
+        )
+        .map(map)
+    },
+
+    async stream(
+      track: Track,
+    ): Promise<string | null> {
+      if (
+        track.streamUrl
+      ) {
+        return track.streamUrl
+      }
+
+      return `${API}/tracks/${encodeURIComponent(
+        track.providerId,
+      )}/stream`
+    },
+  }

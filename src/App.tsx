@@ -4,9 +4,11 @@ import {
   lazy,
   Suspense,
   useEffect,
-  useMemo,
+  useId,
   useRef,
   useState,
+  type ChangeEvent,
+  type CSSProperties,
 } from 'react'
 
 import {
@@ -44,7 +46,6 @@ import {
   Maximize2,
   Shuffle,
   Repeat2,
-  MoreHorizontal,
   Trash2,
   Pencil,
   Check,
@@ -111,133 +112,918 @@ const nav = [
 ] as const
 
 
-/*
- * --------------------------------------------------------------------------
- * REAL-TIME VISUALIZER
- * --------------------------------------------------------------------------
- */
+/* ==========================================================================
+   HELPERS
+   ========================================================================== */
 
-function Visualizer({
-  playing,
-  color,
+
+
+function Artwork({
+  track,
+  className,
+  iconSize = 16,
+  children,
 }: {
-  playing: boolean
-  color: string
+  track: Track
+  className: string
+  iconSize?: number
+  children?: React.ReactNode
 }) {
-  const [
-    frame,
-    setFrame,
-  ] = useState(0)
+  const [failed, setFailed] =
+    useState(false)
 
   useEffect(() => {
-    let animationFrame = 0
+    setFailed(false)
+  }, [track.id, track.artworkUrl])
 
-    const update =
-      () => {
-        if (playing) {
-          setFrame(
-            (value) =>
-              value + 1,
-          )
-        }
+  const artwork =
+    track.artworkUrl?.trim() || ''
 
-        animationFrame =
-          requestAnimationFrame(
-            update,
-          )
-      }
-
-    animationFrame =
-      requestAnimationFrame(
-        update,
-      )
-
-    return () => {
-      cancelAnimationFrame(
-        animationFrame,
-      )
-    }
-  }, [playing])
-
-  const data =
-    useMemo(
-      () =>
-        audioEngine.getFrequencyData(),
-      [frame],
-    )
-
-  const bars =
-    Array.from({
-      length: 42,
-    })
+  const showImage =
+    artwork.length > 0 &&
+    !failed
 
   return (
     <div
+      className={`artwork ${className}`}
+      style={{
+        background: `radial-gradient(
+          circle at 30% 30%,
+          ${track.color},
+          #080811 68%
+        )`,
+      }}
+    >
+      {showImage ? (
+        <img
+          src={artwork}
+          alt={`${track.title} artwork`}
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onLoad={() => {
+            console.log(
+              '[MusicGalaxy artwork OK]',
+              track.provider,
+              track.title,
+              artwork,
+            )
+          }}
+          onError={(event) => {
+            console.error(
+              '[MusicGalaxy artwork FAILED]',
+              {
+                provider: track.provider,
+                title: track.title,
+                url: artwork,
+                element: event.currentTarget,
+              },
+            )
+
+            setFailed(true)
+          }}
+        />
+      ) : (
+        <Disc3 size={iconSize} />
+      )}
+
+      {children}
+    </div>
+  )
+}
+
+function formatTime(
+  seconds: number,
+) {
+  if (
+    !Number.isFinite(
+      seconds,
+    ) ||
+    seconds < 0
+  ) {
+    return '0:00'
+  }
+
+  const minutes =
+    Math.floor(
+      seconds / 60,
+    )
+
+  const secs =
+    Math.floor(
+      seconds % 60,
+    )
+
+  return `${minutes}:${String(
+    secs,
+  ).padStart(
+    2,
+    '0',
+  )}`
+}
+
+
+/* ==========================================================================
+   CONSTANT SEEK WAVE
+
+   IMPORTANT BEHAVIOUR
+
+   PAUSED
+     -> perfectly straight horizontal line
+
+   PLAYING
+     -> smooth continuous sine wave
+
+   SONG FREQUENCY
+     -> NEVER controls the wave
+
+   CURRENT SONG TIME
+     -> ONLY controls horizontal position of dot
+   ========================================================================== */
+
+function PlayerWave({
+  playing,
+  color,
+  currentTime,
+  duration,
+  onSeek,
+}: {
+  playing: boolean
+  color: string
+  currentTime: number
+  duration: number
+  onSeek: (
+    seconds: number,
+  ) => void
+}) {
+  const containerRef =
+    useRef<HTMLDivElement | null>(
+      null,
+    )
+
+  const waveRef =
+    useRef<SVGPathElement | null>(
+      null,
+    )
+
+  const progressWaveRef =
+    useRef<SVGPathElement | null>(
+      null,
+    )
+
+  const dotRef =
+    useRef<HTMLDivElement | null>(
+      null,
+    )
+
+  const rafRef =
+    useRef<number>(0)
+
+  const startRef =
+    useRef<number | null>(
+      null,
+    )
+
+  /*
+   * Keep playback information in refs.
+   *
+   * This prevents currentTime updates from
+   * restarting the wave animation.
+   */
+  const currentTimeRef =
+    useRef(
+      currentTime,
+    )
+
+  const durationRef =
+    useRef(
+      duration,
+    )
+
+  currentTimeRef.current =
+    currentTime
+
+  durationRef.current =
+    duration
+
+
+  /*
+   * Unique clip id.
+   */
+  const rawId =
+    useId()
+
+  const clipId =
+    `player-wave-clip-${rawId.replace(
+      /:/g,
+      '',
+    )}`
+
+
+  /*
+   * ---------------------------------------------------------------
+   * WAVE SETTINGS
+   * ---------------------------------------------------------------
+   *
+   * Smaller amplitude:
+   *   old ~31px
+   *   new  ~15px
+   *
+   * Shorter wavelength:
+   *   5 compact cycles across the bar
+   *
+   * The result is a smaller, smoother,
+   * more consistent waveform.
+   */
+
+  const amplitude = 10
+
+  const cycles = 10
+
+  const center = 50
+
+
+  /*
+   * ---------------------------------------------------------------
+   * EXACT WAVE FUNCTION
+   * ---------------------------------------------------------------
+   *
+   * This is used for both:
+   *
+   * 1. Drawing the waveform
+   * 2. Positioning the dot
+   *
+   * Therefore the dot always sits
+   * exactly ON the curve.
+   */
+
+  const getWaveY = (
+    normalizedX: number,
+    phase: number,
+  ) => {
+    if (!playing) {
+      return center
+    }
+
+    return (
+      center +
+      Math.sin(
+        normalizedX *
+          Math.PI *
+          2 *
+          cycles +
+          phase,
+      ) *
+        amplitude
+    )
+  }
+
+
+  /*
+   * ---------------------------------------------------------------
+   * WAVE ANIMATION LOOP
+   * ---------------------------------------------------------------
+   *
+   * CRITICAL:
+   *
+   * The dependency is ONLY "playing".
+   *
+   * currentTime does NOT restart this loop.
+   *
+   * Therefore:
+   *
+   * PLAY
+   *   -> animation starts
+   *
+   * PAUSE
+   *   -> wave becomes straight immediately
+   *
+   * Song time updates
+   *   -> dot moves
+   *   -> wave animation continues uninterrupted
+   */
+
+  useEffect(() => {
+    let mounted = true
+
+    startRef.current =
+      null
+
+    const animate = (
+      timestamp: number,
+    ) => {
+      if (!mounted) {
+        return
+      }
+
+      if (
+        startRef.current ===
+        null
+      ) {
+        startRef.current =
+          timestamp
+      }
+
+      const elapsed =
+        (
+          timestamp -
+          startRef.current
+        ) *
+        0.001
+
+      /*
+       * Constant wave speed.
+       *
+       * This value is completely
+       * independent of the song.
+       */
+      const phase =
+        elapsed * 1.2
+
+      const wave =
+        waveRef.current
+
+      const progressWave =
+        progressWaveRef.current
+
+      const dot =
+        dotRef.current
+
+      /*
+       * -----------------------------------------------------------
+       * BUILD WAVE PATH
+       * -----------------------------------------------------------
+       */
+
+      if (
+        wave &&
+        progressWave
+      ) {
+        let path = ''
+
+        const points = 240
+
+        for (
+          let i = 0;
+          i <= points;
+          i += 1
+        ) {
+          const normalizedX =
+            i /
+            points
+
+          const x =
+            normalizedX *
+            100
+
+          const y =
+            getWaveY(
+              normalizedX,
+              phase,
+            )
+
+          path +=
+            i === 0
+              ? `M ${x.toFixed(
+                  3,
+                )} ${y.toFixed(
+                  3,
+                )}`
+              : ` L ${x.toFixed(
+                  3,
+                )} ${y.toFixed(
+                  3,
+                )}`
+        }
+
+        wave.setAttribute(
+          'd',
+          path,
+        )
+
+        progressWave.setAttribute(
+          'd',
+          path,
+        )
+      }
+
+
+      /*
+       * -----------------------------------------------------------
+       * PLAYBACK POSITION
+       * -----------------------------------------------------------
+       */
+
+      const liveDuration =
+        durationRef.current
+
+      const liveCurrentTime =
+        currentTimeRef.current
+
+      const progress =
+        liveDuration > 0
+          ? Math.min(
+              1,
+              Math.max(
+                0,
+                liveCurrentTime /
+                  liveDuration,
+              ),
+            )
+          : 0
+
+
+      /*
+       * -----------------------------------------------------------
+       * DOT
+       * -----------------------------------------------------------
+       *
+       * PAUSED:
+       *   dot sits at center line
+       *
+       * PLAYING:
+       *   dot follows the exact sine wave
+       */
+
+      if (dot) {
+        const y =
+          getWaveY(
+            progress,
+            phase,
+          )
+
+        dot.style.left =
+          `${progress * 100}%`
+
+        dot.style.top =
+          `${y}%`
+      }
+
+
+      rafRef.current =
+        requestAnimationFrame(
+          animate,
+        )
+    }
+
+
+    rafRef.current =
+      requestAnimationFrame(
+        animate,
+      )
+
+
+    return () => {
+      mounted = false
+
+      cancelAnimationFrame(
+        rafRef.current,
+      )
+
+      startRef.current =
+        null
+    }
+  }, [playing])
+
+
+  /*
+   * ---------------------------------------------------------------
+   * SEEK
+   * ---------------------------------------------------------------
+   */
+
+  const seekFromPointer =
+    (
+      clientX: number,
+    ) => {
+      const element =
+        containerRef.current
+
+      if (!element) {
+        return
+      }
+
+      const rect =
+        element.getBoundingClientRect()
+
+      if (
+        rect.width <= 0
+      ) {
+        return
+      }
+
+      const ratio =
+        Math.min(
+          1,
+          Math.max(
+            0,
+            (
+              clientX -
+              rect.left
+            ) /
+              rect.width,
+          ),
+        )
+
+      onSeek(
+        ratio *
+          durationRef.current,
+      )
+    }
+
+
+  const progress =
+    duration > 0
+      ? Math.min(
+          1,
+          Math.max(
+            0,
+            currentTime /
+              duration,
+          ),
+        )
+      : 0
+
+
+  return (
+    <div
+      ref={
+        containerRef
+      }
       className={
         playing
-          ? 'visualizer is-playing'
-          : 'visualizer'
+          ? 'player-wave playing'
+          : 'player-wave'
       }
-      aria-hidden
-    >
-      {bars.map(
-        (_, index) => {
-          let height = 5
-
-          if (
-            playing &&
-            data.length
-          ) {
-            const position =
-              Math.floor(
-                (
-                  index /
-                  bars.length
-                ) *
-                data.length,
-              )
-
-            const value =
-              data[
-                Math.min(
-                  position,
-                  data.length -
-                    1,
-                )
-              ] / 255
-
-            height =
-              5 +
-              value *
-                20
-          }
-
-          return (
-            <span
-              key={index}
-              style={
-                {
-                  height: `${height}px`,
-                  '--i':
-                    index,
-                  '--c':
-                    color,
-                } as React.CSSProperties
-              }
-            />
+      style={
+        {
+          '--wave-color':
+            color,
+        } as CSSProperties
+      }
+      onPointerDown={(
+        event,
+      ) => {
+        seekFromPointer(
+          event.clientX,
+        )
+      }}
+      role="slider"
+      tabIndex={0}
+      aria-label="Seek through song"
+      aria-valuemin={0}
+      aria-valuemax={
+        duration || 0
+      }
+      aria-valuenow={
+        currentTime
+      }
+      onKeyDown={(
+        event,
+      ) => {
+        if (
+          event.key ===
+          'ArrowRight'
+        ) {
+          onSeek(
+            Math.min(
+              duration,
+              currentTime + 5,
+            ),
           )
-        },
-      )}
+        }
+
+        if (
+          event.key ===
+          'ArrowLeft'
+        ) {
+          onSeek(
+            Math.max(
+              0,
+              currentTime - 5,
+            ),
+          )
+        }
+
+        if (
+          event.key ===
+          'Home'
+        ) {
+          onSeek(0)
+        }
+
+        if (
+          event.key ===
+          'End'
+        ) {
+          onSeek(duration)
+        }
+      }}
+    >
+
+      <svg
+        className="player-wave-svg"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+
+        <defs>
+
+          <clipPath
+            id={
+              clipId
+            }
+          >
+
+            <rect
+              x="0"
+              y="0"
+              width={
+                progress *
+                100
+              }
+              height="100"
+            />
+
+          </clipPath>
+
+        </defs>
+
+
+        <path
+          ref={
+            waveRef
+          }
+          className="wave-line background"
+          d="M 0 50 L 100 50"
+        />
+
+
+        <path
+          ref={
+            progressWaveRef
+          }
+          className="wave-line foreground"
+          d="M 0 50 L 100 50"
+          clipPath={
+            `url(#${clipId})`
+          }
+        />
+
+      </svg>
+
+
+      <div
+        ref={
+          dotRef
+        }
+        className="player-wave-dot"
+        style={{
+          left:
+            `${progress * 100}%`,
+          top: '50%',
+        }}
+      />
+
     </div>
   )
 }
 
 
-/*
- * --------------------------------------------------------------------------
- * MAIN APP
- * --------------------------------------------------------------------------
- */
+/* ==========================================================================
+   LIKE HEART BURST — SMOOTH PARABOLIC PROJECTILES
+   ========================================================================== */
+
+function LikeHeartBurst({
+  trigger,
+  direction,
+  sourceRef,
+  destinationRef,
+}: {
+  trigger: number
+  direction: 'forward' | 'reverse'
+  sourceRef: React.RefObject<HTMLElement | null>
+  destinationRef: React.RefObject<HTMLElement | null>
+}) {
+  type Point = { x: number; y: number }
+  type Particle = {
+    id: number
+    size: number
+    delay: number
+    duration: number
+    rotation: number
+    points: Point[]
+  }
+
+  const [burst, setBurst] = useState<{
+    id: number
+    particles: Particle[]
+  } | null>(null)
+
+  const forwardRoutesRef = useRef<Particle[] | null>(null)
+
+  useEffect(() => {
+    if (!trigger) return
+
+    const sourceRect = sourceRef.current?.getBoundingClientRect()
+    const destinationRect = destinationRef.current?.getBoundingClientRect()
+
+    if (!sourceRect || !destinationRect) return
+
+    const likePoint: Point = {
+      x: sourceRect.left + sourceRect.width / 2,
+      y: sourceRect.top + sourceRect.height / 2,
+    }
+
+    const thumbnailPoint: Point = {
+      x: destinationRect.left + destinationRect.width / 2,
+      y: destinationRect.top + destinationRect.height / 2,
+    }
+
+    const makeForwardParticles = (): Particle[] => {
+      const centerX = window.innerWidth * 0.5
+      const centerY = window.innerHeight * 0.30
+      const particles: Particle[] = []
+      const sampleQuadratic = (
+        t: number,
+        p0: Point,
+        p1: Point,
+        p2: Point,
+      ): Point => {
+        const u = 1 - t
+        return {
+          x: u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x,
+          y: u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y,
+        }
+      }
+
+      for (let index = 0; index < 14; index += 1) {
+        const spread = (index - 6.5) / 6.5
+        const side = index % 2 === 0 ? -1 : 1
+        const endSpread = spread * 26
+        const apex = {
+          x:
+            centerX +
+            spread * 155 +
+            side * (8 + Math.random() * 24),
+          y:
+            centerY -
+            20 -
+            Math.random() * 72,
+        }
+
+        const control: Point = {
+          x: apex.x + (Math.random() - 0.5) * 48,
+          y: apex.y + (Math.random() - 0.5) * 22,
+        }
+
+        const end: Point = {
+          x: thumbnailPoint.x + endSpread,
+          y: thumbnailPoint.y + (Math.random() - 0.5) * 10,
+        }
+
+        const points: Point[] = []
+        const steps = 15
+
+        for (let step = 0; step <= steps; step += 1) {
+          points.push(
+            sampleQuadratic(
+              step / steps,
+              likePoint,
+              control,
+              end,
+            ),
+          )
+        }
+
+        particles.push({
+          id: index,
+          size: 9 + Math.random() * 6,
+          delay: Math.random() * 0.08,
+          duration: 1.38 + Math.random() * 0.16,
+          rotation: (Math.random() - 0.5) * 70,
+          points,
+        })
+      }
+
+      return particles
+    }
+
+    let particles: Particle[]
+
+    if (direction === 'forward' || !forwardRoutesRef.current) {
+      particles = makeForwardParticles()
+      forwardRoutesRef.current = particles.map((particle) => ({
+        ...particle,
+        points: particle.points.map((point) => ({ ...point })),
+      }))
+    } else {
+      particles = forwardRoutesRef.current.map((particle) => ({
+        ...particle,
+        delay: Math.random() * 0.08,
+        duration: 1.38 + Math.random() * 0.16,
+        points: [...particle.points].reverse().map((point) => ({
+          ...point,
+        })),
+      }))
+    }
+
+    const renderOrigin =
+      direction === 'forward'
+        ? likePoint
+        : thumbnailPoint
+
+    const normalized = particles.map((particle) => ({
+      ...particle,
+      points: particle.points.map((point) => ({
+        x: point.x - renderOrigin.x,
+        y: point.y - renderOrigin.y,
+      })),
+    }))
+
+    setBurst({
+      id: trigger,
+      particles: normalized,
+    })
+
+    const timeout = window.setTimeout(() => {
+      setBurst(null)
+    }, 1850)
+
+    return () => window.clearTimeout(timeout)
+  }, [trigger, direction, sourceRef, destinationRef])
+
+  if (!burst) return null
+
+  const renderSource =
+    direction === 'forward'
+      ? sourceRef.current?.getBoundingClientRect()
+      : destinationRef.current?.getBoundingClientRect()
+
+  const originX = renderSource
+    ? renderSource.left + renderSource.width / 2
+    : 0
+  const originY = renderSource
+    ? renderSource.top + renderSource.height / 2
+    : 0
+
+  return (
+    <div className="like-burst-layer" aria-hidden="true">
+      {burst.particles.map((particle) => (
+        <motion.span
+          key={`${burst.id}-${particle.id}`}
+          className="like-burst-heart"
+          style={{
+            left: originX,
+            top: originY,
+            width: particle.size,
+            height: particle.size,
+          }}
+          initial={{
+            x: -particle.size / 2,
+            y: -particle.size / 2,
+            opacity: 0,
+            scale: 0.3,
+            rotate: 0,
+          }}
+          animate={{
+            x: particle.points.map(
+              (point) => point.x - particle.size / 2,
+            ),
+            y: particle.points.map(
+              (point) => point.y - particle.size / 2,
+            ),
+            opacity: [0, 1, 1, 0.94, 0.62, 0.22, 0],
+            scale: [0.3, 0.8, 1, 1.02, 0.9, 0.45, 0.02],
+            rotate: [
+              0,
+              particle.rotation * 0.25,
+              particle.rotation * 0.5,
+              particle.rotation * 0.8,
+              particle.rotation,
+              particle.rotation * 1.15,
+              particle.rotation * 1.3,
+            ],
+          }}
+          transition={{
+            duration: particle.duration,
+            delay: particle.delay,
+            ease: 'easeInOut',
+            times: [0, 0.08, 0.22, 0.48, 0.68, 0.86, 1],
+          }}
+        >
+          <Heart
+            size={particle.size}
+            fill="currentColor"
+            strokeWidth={1.8}
+          />
+        </motion.span>
+      ))}
+    </div>
+  )
+}
+
 
 export default function App() {
   const [
@@ -255,7 +1041,9 @@ export default function App() {
   const [
     tab,
     setTab,
-  ] = useState('Galaxy')
+  ] = useState(
+    'Galaxy',
+  )
 
   const [
     query,
@@ -263,9 +1051,24 @@ export default function App() {
   ] = useState('')
 
   const [
+    searchOpen,
+    setSearchOpen,
+  ] = useState(false)
+
+  const searchAreaRef =
+    useRef<HTMLDivElement | null>(
+      null,
+    )
+
+  const [
     liked,
     setLiked,
   ] = useState(false)
+
+  const [likeBurst, setLikeBurst] = useState(0)
+  const [likeBurstDirection, setLikeBurstDirection] = useState<'forward' | 'reverse'>('forward')
+  const likeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const currentArtworkRef = useRef<HTMLDivElement | null>(null)
 
   const [
     menu,
@@ -305,9 +1108,9 @@ export default function App() {
   const [
     selectedPlaylistId,
     setSelectedPlaylistId,
-  ] = useState<string | null>(
-    null,
-  )
+  ] = useState<
+    string | null
+  >(null)
 
   const [
     playlistName,
@@ -329,18 +1132,14 @@ export default function App() {
   const [
     editingPlaylistId,
     setEditingPlaylistId,
-  ] = useState<string | null>(
-    null,
-  )
+  ] = useState<
+    string | null
+  >(null)
 
   const [
     editingPlaylistName,
     setEditingPlaylistName,
   ] = useState('')
-
-  /*
-   * Audio state remains owned by AudioEngine.
-   */
 
   const [
     audioState,
@@ -350,18 +1149,37 @@ export default function App() {
       audioEngine.getState(),
   )
 
+
+  /* ========================================================================
+     UI MODE STATE
+     ======================================================================== */
+
+  const [shuffleUi, setShuffleUi] = useState(
+    () => audioEngine.getState().shuffle,
+  )
+
+  const [repeatUi, setRepeatUi] = useState(
+    () => audioEngine.getState().repeat,
+  )
+
+
+  /* ========================================================================
+     AUDIO STATE
+     ======================================================================== */
+
   useEffect(() => {
     const unsubscribe =
       audioEngine.subscribe(
-        (state) => {
+        (
+          state,
+        ) => {
           setAudioState(
             state,
           )
 
+
           if (
-            state.track &&
-            state.track.id !==
-              active.id
+            state.track
           ) {
             setActive(
               state.track,
@@ -373,7 +1191,8 @@ export default function App() {
     return () => {
       unsubscribe()
     }
-  }, [active.id])
+  }, [])
+
 
   const playing =
     audioState.playing
@@ -382,7 +1201,9 @@ export default function App() {
     audioState.currentTime
 
   const duration =
-    audioState.duration
+    audioState.duration ||
+    active.duration ||
+    0
 
   const volume =
     Math.round(
@@ -393,22 +1214,83 @@ export default function App() {
   const muted =
     audioState.muted
 
-  const shuffle =
-    audioState.shuffle
+  const shuffle = shuffleUi
 
-  const repeat =
-    audioState.repeat
+  const repeat = repeatUi
 
   const audioLoading =
     audioState.loading
 
-  const audioError =
-    audioState.error
+
+  /* ========================================================================
+     SEARCH OUTSIDE CLICK
+     ======================================================================== */
+
+  useEffect(() => {
+    if (!searchOpen) {
+      return
+    }
+
+    const handlePointerDown =
+      (
+        event: PointerEvent,
+      ) => {
+        const target =
+          event.target as Node
+
+        if (
+          searchAreaRef.current &&
+          !searchAreaRef.current.contains(
+            target,
+          )
+        ) {
+          setSearchOpen(
+            false,
+          )
+        }
+      }
+
+    const handleKeyDown =
+      (
+        event: KeyboardEvent,
+      ) => {
+        if (
+          event.key ===
+          'Escape'
+        ) {
+          setSearchOpen(
+            false,
+          )
+        }
+      }
+
+    document.addEventListener(
+      'pointerdown',
+      handlePointerDown,
+    )
+
+    document.addEventListener(
+      'keydown',
+      handleKeyDown,
+    )
+
+    return () => {
+      document.removeEventListener(
+        'pointerdown',
+        handlePointerDown,
+      )
+
+      document.removeEventListener(
+        'keydown',
+        handleKeyDown,
+      )
+    }
+  }, [searchOpen])
 
 
-  /*
-   * Restore persistent library.
-   */
+  /* ========================================================================
+     LIBRARY RESTORE
+     ======================================================================== */
 
   useEffect(() => {
     let cancelled = false
@@ -418,7 +1300,9 @@ export default function App() {
         const snapshot =
           await loadLibrary()
 
-        if (cancelled) {
+        if (
+          cancelled
+        ) {
           return
         }
 
@@ -434,7 +1318,9 @@ export default function App() {
           snapshot.tracks.length
         ) {
           setTracks(
-            (previous) => {
+            (
+              previous,
+            ) => {
               const localIds =
                 new Set(
                   snapshot.tracks.map(
@@ -448,7 +1334,9 @@ export default function App() {
               return [
                 ...snapshot.tracks,
                 ...previous.filter(
-                  (track) =>
+                  (
+                    track,
+                  ) =>
                     !localIds.has(
                       track.id,
                     ),
@@ -457,7 +1345,9 @@ export default function App() {
             },
           )
         }
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           'Library restore failed:',
           error,
@@ -473,9 +1363,9 @@ export default function App() {
   }, [])
 
 
-  /*
-   * Keep playback queue synchronized.
-   */
+  /* ========================================================================
+     AUDIO QUEUE
+     ======================================================================== */
 
   useEffect(() => {
     audioEngine.setQueue(
@@ -484,9 +1374,9 @@ export default function App() {
   }, [tracks])
 
 
-  /*
-   * Load trending music.
-   */
+  /* ========================================================================
+     TRENDING
+     ======================================================================== */
 
   useEffect(() => {
     let cancelled = false
@@ -498,66 +1388,82 @@ export default function App() {
         const results =
           await trendingAll()
 
-        if (cancelled) {
+        if (
+          cancelled
+        ) {
           return
         }
 
-        setTracks(
-          (previous) => {
-            const map =
-              new Map<
-                string,
-                Track
-              >()
-
-            previous.forEach(
-              (track) =>
-                map.set(
-                  track.id,
-                  track,
-                ),
-            )
-
-            results.forEach(
-              (track) =>
-                map.set(
-                  track.id,
-                  track,
-                ),
-            )
-
-            return Array.from(
-              map.values(),
-            )
-          },
-        )
-
-        const current =
-          audioEngine.getState()
-            .track
-
         if (
-          !current &&
           results.length
         ) {
-          setActive(
-            results[0],
+          setTracks(
+            (
+              previous,
+            ) => {
+              const map =
+                new Map<
+                  string,
+                  Track
+                >()
+
+              previous.forEach(
+                (
+                  track,
+                ) =>
+                  map.set(
+                    track.id,
+                    track,
+                  ),
+              )
+
+              results.forEach(
+                (
+                  track,
+                ) =>
+                  map.set(
+                    track.id,
+                    track,
+                  ),
+              )
+
+              return Array.from(
+                map.values(),
+              )
+            },
           )
+
+          if (
+            !audioEngine.getState()
+              .track
+          ) {
+            setActive(
+              results[0],
+            )
+          }
         }
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           'Failed to load music:',
           error,
         )
 
-        if (!cancelled) {
+        if (
+          !cancelled
+        ) {
           setMessage(
             'Music providers are temporarily unavailable.',
           )
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false)
+        if (
+          !cancelled
+        ) {
+          setLoading(
+            false,
+          )
         }
       }
     }
@@ -570,9 +1476,9 @@ export default function App() {
   }, [])
 
 
-  /*
-   * Search.
-   */
+  /* ========================================================================
+     SEARCH
+     ======================================================================== */
 
   useEffect(() => {
     const search =
@@ -596,38 +1502,50 @@ export default function App() {
                 search,
               )
 
-            if (cancelled) {
+            if (
+              cancelled
+            ) {
               return
             }
 
-            if (
-              results.length
-            ) {
-              setTracks(
-                results,
-              )
+            setTracks(
+              results,
+            )
 
-              setActive(
-                results[0],
-              )
-            } else {
+            setSearchOpen(
+              true,
+            )
+
+            if (
+              !results.length
+            ) {
               setMessage(
                 `No music found for "${search}".`,
               )
             }
-          } catch (error) {
+          } catch (
+            error
+          ) {
             console.error(
               'Search failed:',
               error,
             )
 
-            if (!cancelled) {
+            if (
+              !cancelled
+            ) {
               setMessage(
                 'Music providers are temporarily unavailable.',
               )
+
+              setSearchOpen(
+                true,
+              )
             }
           } finally {
-            if (!cancelled) {
+            if (
+              !cancelled
+            ) {
               setLoading(
                 false,
               )
@@ -639,6 +1557,7 @@ export default function App() {
 
     return () => {
       cancelled = true
+
       clearTimeout(
         timer,
       )
@@ -646,79 +1565,65 @@ export default function App() {
   }, [query])
 
 
-  /*
-   * Galaxy pulse is now derived from
-   * the real analyser.
-   */
+  /* ========================================================================
+     GALAXY PULSE
+     ======================================================================== */
 
   useEffect(() => {
-    let animationFrame =
-      0
+    let raf = 0
 
-    const animate =
-      () => {
-        const snapshot =
-          audioEngine.getVisualizerSnapshot()
+    const update = () => {
+      const level =
+        audioEngine.getAudioLevel()
 
-        const energy =
-          snapshot.bass *
-            0.55 +
-          snapshot.mid *
-            0.3 +
-          snapshot.treble *
-            0.15
+      setPulse(
+        playing
+          ? Math.min(
+              1,
+              0.04 +
+                level *
+                  0.8,
+            )
+          : 0.03,
+      )
 
-        setPulse(
-          playing
-            ? 0.05 +
-                energy *
-                  0.95
-            : 0.02,
+      raf =
+        requestAnimationFrame(
+          update,
         )
+    }
 
-        animationFrame =
-          requestAnimationFrame(
-            animate,
-          )
-      }
-
-    animationFrame =
+    raf =
       requestAnimationFrame(
-        animate,
+        update,
       )
 
     return () => {
       cancelAnimationFrame(
-        animationFrame,
+        raf,
       )
     }
   }, [playing])
 
 
-  /*
-   * Show analyser errors.
-   */
-
-  useEffect(() => {
-    if (audioError) {
-      setMessage(
-        audioError,
-      )
-    }
-  }, [audioError])
-
-
-  /*
-   * Play track.
-   */
+  /* ========================================================================
+     CHOOSE TRACK
+     ======================================================================== */
 
   const choose = async (
     track: Track,
   ) => {
+    setActive(
+      track,
+    )
+
     setLiked(false)
+
     setMessage('')
 
-    setActive(track)
+    setSearchOpen(
+      false,
+    )
 
     const success =
       await audioEngine.play(
@@ -741,9 +1646,9 @@ export default function App() {
   }
 
 
-  /*
-   * Play / pause.
-   */
+  /* ========================================================================
+     PLAYBACK
+     ======================================================================== */
 
   const togglePlayback =
     async () => {
@@ -768,10 +1673,6 @@ export default function App() {
     }
 
 
-  /*
-   * Next.
-   */
-
   const next =
     async () => {
       const success =
@@ -786,17 +1687,18 @@ export default function App() {
           .track
 
       if (track) {
-        setActive(track)
+        setActive(
+          track,
+        )
+
+        setLiked(false)
+
         void addRecent(
           track.id,
         )
       }
     }
 
-
-  /*
-   * Previous.
-   */
 
   const previous =
     async () => {
@@ -812,7 +1714,12 @@ export default function App() {
           .track
 
       if (track) {
-        setActive(track)
+        setActive(
+          track,
+        )
+
+        setLiked(false)
+
         void addRecent(
           track.id,
         )
@@ -820,27 +1727,25 @@ export default function App() {
     }
 
 
-  /*
-   * Seek.
-   */
+  /* ========================================================================
+     SEEK
+     ======================================================================== */
 
-  const handleSeek = (
-    event: React.ChangeEvent<HTMLInputElement>,
+  const seekTo = (
+    seconds: number,
   ) => {
     audioEngine.seek(
-      Number(
-        event.target.value,
-      ),
+      seconds,
     )
   }
 
 
-  /*
-   * Volume.
-   */
+  /* ========================================================================
+     VOLUME
+     ======================================================================== */
 
   const handleVolume = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement>,
   ) => {
     audioEngine.setVolume(
       Number(
@@ -850,47 +1755,54 @@ export default function App() {
   }
 
 
-  /*
-   * Mute.
-   */
-
   const toggleMute = () => {
     audioEngine.toggleMute()
   }
 
 
-  /*
-   * Shuffle.
-   */
+  const toggleShuffle = () => {
+    audioEngine.toggleShuffle()
 
-  const toggleShuffle =
-    () => {
-      audioEngine.toggleShuffle()
-    }
-
-
-  /*
-   * Repeat.
-   */
-
-  const cycleRepeat =
-    () => {
-      audioEngine.cycleRepeat()
-    }
+    const nextShuffle = !shuffleUi
+    setShuffleUi(nextShuffle)
+    setAudioState((previous) => ({
+      ...previous,
+      shuffle: nextShuffle,
+    }))
+  }
 
 
-  /*
-   * Favorite.
-   */
+  const cycleRepeat = () => {
+    audioEngine.cycleRepeat()
+
+    const nextRepeat =
+      repeatUi === 'off'
+        ? 'all'
+        : repeatUi === 'all'
+          ? 'one'
+          : 'off'
+
+    setRepeatUi(nextRepeat)
+    setAudioState((previous) => ({
+      ...previous,
+      repeat: nextRepeat,
+    }))
+  }
+
+
+  /* ========================================================================
+     FAVORITE
+     ======================================================================== */
 
   const toggleFavorite =
     async () => {
-      const nextLiked =
-        !liked
+      const nextLiked = !liked
 
-      setLiked(
-        nextLiked,
+      setLiked(nextLiked)
+      setLikeBurstDirection(
+        nextLiked ? 'forward' : 'reverse',
       )
+      setLikeBurst((value) => value + 1)
 
       await setFavorite(
         active.id,
@@ -899,13 +1811,13 @@ export default function App() {
     }
 
 
-  /*
-   * Local import.
-   */
+  /* ========================================================================
+     LOCAL IMPORT
+     ======================================================================== */
 
   const handleLocalImport =
     async (
-      event: React.ChangeEvent<HTMLInputElement>,
+      event: ChangeEvent<HTMLInputElement>,
     ) => {
       const files =
         Array.from(
@@ -919,7 +1831,9 @@ export default function App() {
 
       const audioFiles =
         files.filter(
-          (file) =>
+          (
+            file,
+          ) =>
             file.type.startsWith(
               'audio/',
             ),
@@ -930,9 +1844,7 @@ export default function App() {
           audioFiles,
         )
 
-      if (
-        !localTracks.length
-      ) {
+      if (!localTracks.length) {
         setMessage(
           'No supported audio files were selected.',
         )
@@ -949,9 +1861,7 @@ export default function App() {
           audioFiles,
         )
 
-      if (
-        !saved.length
-      ) {
+      if (!saved.length) {
         setMessage(
           'Unable to save the imported tracks.',
         )
@@ -963,7 +1873,9 @@ export default function App() {
       }
 
       setLibraryTracks(
-        (previous) => {
+        (
+          previous,
+        ) => {
           const map =
             new Map<
               string,
@@ -971,7 +1883,9 @@ export default function App() {
             >()
 
           previous.forEach(
-            (track) =>
+            (
+              track,
+            ) =>
               map.set(
                 track.id,
                 track,
@@ -979,7 +1893,9 @@ export default function App() {
           )
 
           saved.forEach(
-            (track) =>
+            (
+              track,
+            ) =>
               map.set(
                 track.id,
                 track,
@@ -993,11 +1909,15 @@ export default function App() {
       )
 
       setTracks(
-        (previous) => {
+        (
+          previous,
+        ) => {
           const ids =
             new Set(
               saved.map(
-                (track) =>
+                (
+                  track,
+                ) =>
                   track.id,
               ),
             )
@@ -1005,7 +1925,9 @@ export default function App() {
           return [
             ...saved,
             ...previous.filter(
-              (track) =>
+              (
+                track,
+              ) =>
                 !ids.has(
                   track.id,
                 ),
@@ -1018,9 +1940,14 @@ export default function App() {
         saved[0],
       )
 
+      setSearchOpen(
+        false,
+      )
+
       setMessage(
         `${saved.length} local track${
-          saved.length === 1
+          saved.length ===
+          1
             ? ''
             : 's'
         } imported into your library.`,
@@ -1031,17 +1958,19 @@ export default function App() {
     }
 
 
-  /*
-   * Create playlist.
-   */
+  /* ========================================================================
+     PLAYLISTS
+     ======================================================================== */
 
   const openCreatePlaylist =
     () => {
       setPlaylistName('')
+
       setPlaylistDialog(
         true,
       )
     }
+
 
   const handleCreatePlaylist =
     async () => {
@@ -1059,7 +1988,9 @@ export default function App() {
           )
 
         setPlaylists(
-          (previous) => [
+          (
+            previous,
+          ) => [
             playlist,
             ...previous,
           ],
@@ -1076,7 +2007,9 @@ export default function App() {
         setTab(
           'Playlists',
         )
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           'Create playlist failed:',
           error,
@@ -1089,17 +2022,15 @@ export default function App() {
     }
 
 
-  /*
-   * Delete playlist.
-   */
-
   const handleDeletePlaylist =
     async (
       playlistId: string,
     ) => {
       const playlist =
         playlists.find(
-          (item) =>
+          (
+            item,
+          ) =>
             item.id ===
             playlistId,
         )
@@ -1122,9 +2053,13 @@ export default function App() {
         )
 
         setPlaylists(
-          (previous) =>
+          (
+            previous,
+          ) =>
             previous.filter(
-              (item) =>
+              (
+                item,
+              ) =>
                 item.id !==
                 playlistId,
             ),
@@ -1138,7 +2073,9 @@ export default function App() {
             null,
           )
         }
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           'Delete playlist failed:',
           error,
@@ -1146,10 +2083,6 @@ export default function App() {
       }
     }
 
-
-  /*
-   * Rename playlist.
-   */
 
   const startRename =
     (
@@ -1163,6 +2096,7 @@ export default function App() {
         playlist.name,
       )
     }
+
 
   const saveRename =
     async () => {
@@ -1181,7 +2115,9 @@ export default function App() {
 
       const current =
         playlists.find(
-          (item) =>
+          (
+            item,
+          ) =>
             item.id ===
             editingPlaylistId,
         )
@@ -1204,9 +2140,13 @@ export default function App() {
         }
 
         setPlaylists(
-          (previous) =>
+          (
+            previous,
+          ) =>
             previous.map(
-              (item) =>
+              (
+                item,
+              ) =>
                 item.id ===
                 updated.id
                   ? updated
@@ -1221,7 +2161,9 @@ export default function App() {
         setEditingPlaylistName(
           '',
         )
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           'Rename playlist failed:',
           error,
@@ -1229,10 +2171,6 @@ export default function App() {
       }
     }
 
-
-  /*
-   * Add track.
-   */
 
   const addToPlaylist =
     async (
@@ -1250,9 +2188,13 @@ export default function App() {
       }
 
       setPlaylists(
-        (previous) =>
+        (
+          previous,
+        ) =>
           previous.map(
-            (item) =>
+            (
+              item,
+            ) =>
               item.id ===
               updated.id
                 ? updated
@@ -1270,10 +2212,6 @@ export default function App() {
     }
 
 
-  /*
-   * Remove track.
-   */
-
   const removeFromPlaylist =
     async (
       playlistId: string,
@@ -1290,9 +2228,13 @@ export default function App() {
       }
 
       setPlaylists(
-        (previous) =>
+        (
+          previous,
+        ) =>
           previous.map(
-            (item) =>
+            (
+              item,
+            ) =>
               item.id ===
               updated.id
                 ? updated
@@ -1302,10 +2244,6 @@ export default function App() {
     }
 
 
-  /*
-   * Play playlist.
-   */
-
   const playPlaylist =
     async (
       playlist: Playlist,
@@ -1313,14 +2251,20 @@ export default function App() {
       const playlistTracks =
         playlist.trackIds
           .map(
-            (id) =>
+            (
+              id,
+            ) =>
               tracks.find(
-                (track) =>
+                (
+                  track,
+                ) =>
                   track.id ===
                   id,
               ) ||
               libraryTracks.find(
-                (track) =>
+                (
+                  track,
+                ) =>
                   track.id ===
                   id,
               ),
@@ -1356,40 +2300,9 @@ export default function App() {
     }
 
 
-  /*
-   * Format time.
-   */
-
-  const formatTime = (
-    seconds: number,
-  ) => {
-    if (
-      !Number.isFinite(
-        seconds,
-      ) ||
-      seconds < 0
-    ) {
-      return '0:00'
-    }
-
-    const minutes =
-      Math.floor(
-        seconds / 60,
-      )
-
-    const secs =
-      Math.floor(
-        seconds % 60,
-      )
-
-    return `${minutes}:${String(
-      secs,
-    ).padStart(
-      2,
-      '0',
-    )}`
-  }
-
+  /* ========================================================================
+     FILTERS
+     ======================================================================== */
 
   const filtered =
     tab === 'Library'
@@ -1398,16 +2311,36 @@ export default function App() {
 
   const selectedPlaylist =
     playlists.find(
-      (playlist) =>
+      (
+        playlist,
+      ) =>
         playlist.id ===
         selectedPlaylistId,
     )
 
+  const repeatLabel =
+    repeat === 'one'
+      ? 'Repeat one'
+      : repeat === 'all'
+        ? 'Repeat all'
+        : 'Repeat off'
+
+  const searchResults =
+    query.trim()
+      ? tracks
+      : []
+
+
+  /* ========================================================================
+     RENDER
+     ======================================================================== */
 
   return (
     <div className="app">
 
-      {/* SIDEBAR */}
+      {/* ================================================================ */}
+      {/* SIDEBAR                                                           */}
+      {/* ================================================================ */}
 
       <aside
         className={
@@ -1420,9 +2353,11 @@ export default function App() {
         <div className="brand">
 
           <div className="brand-orb">
+
             <SparkleIcon
               size={18}
             />
+
           </div>
 
           <span>
@@ -1463,13 +2398,17 @@ export default function App() {
         <nav>
 
           {nav.map(
-            ([name, Icon]) => (
+            (
+              [
+                name,
+                Icon,
+              ],
+            ) => (
 
               <button
                 key={name}
                 className={
-                  tab ===
-                  name
+                  tab === name
                     ? 'nav-item active'
                     : 'nav-item'
                 }
@@ -1479,6 +2418,10 @@ export default function App() {
                   )
 
                   setMenu(
+                    false,
+                  )
+
+                  setSearchOpen(
                     false,
                   )
                 }}
@@ -1511,7 +2454,9 @@ export default function App() {
           'Focus',
           'New Releases',
         ].map(
-          (item) => (
+          (
+            item,
+          ) => (
 
             <button
               className="nav-item subtle"
@@ -1523,6 +2468,11 @@ export default function App() {
                     'Trending'
                     ? ''
                     : item,
+                )
+
+                setSearchOpen(
+                  item !==
+                    'Trending',
                 )
 
                 setTab(
@@ -1584,7 +2534,9 @@ export default function App() {
 
       <main className="main">
 
-        {/* TOP BAR */}
+        {/* ================================================================ */}
+        {/* TOPBAR                                                           */}
+        {/* ================================================================ */}
 
         <header className="topbar">
 
@@ -1592,47 +2544,252 @@ export default function App() {
             className="mobile-menu"
             onClick={() =>
               setMenu(
-                !menu,
+                (
+                  value,
+                ) =>
+                  !value,
               )
             }
           >
+
             <Menu />
+
           </button>
 
 
-          <div className="search">
+          <div
+            ref={
+              searchAreaRef
+            }
+            className="search-wrapper"
+          >
 
-            <Search
-              size={17}
-            />
-
-            <input
-              value={query}
-              onChange={(
-                event,
-              ) =>
-                setQuery(
-                  event.target
-                    .value,
-                )
+            <div
+              className={
+                searchOpen
+                  ? 'search is-open'
+                  : 'search'
               }
-              placeholder="Search songs, artists, albums..."
-            />
+            >
 
-            {query && (
+              <Search
+                size={17}
+              />
 
-              <button
-                onClick={() => {
-                  setQuery('')
-                  setMessage('')
+
+              <input
+                value={
+                  query
+                }
+                onFocus={() => {
+
+                  if (
+                    query.trim()
+                  ) {
+                    setSearchOpen(
+                      true,
+                    )
+                  }
+
                 }}
-              >
-                <X
-                  size={15}
-                />
-              </button>
+                onChange={(
+                  event,
+                ) => {
 
-            )}
+                  const value =
+                    event.target
+                      .value
+
+                  setQuery(
+                    value,
+                  )
+
+                  setSearchOpen(
+                    Boolean(
+                      value.trim(),
+                    ),
+                  )
+
+                }}
+                placeholder="Search songs, artists, albums..."
+                autoComplete="off"
+                aria-label="Search"
+              />
+
+
+              {query && (
+
+                <button
+                  type="button"
+                  className="search-clear"
+                  aria-label="Clear search"
+                  onClick={() => {
+
+                    setQuery('')
+
+                    setMessage('')
+
+                    setSearchOpen(
+                      false,
+                    )
+
+                  }}
+                >
+
+                  <X
+                    size={15}
+                  />
+
+                </button>
+
+              )}
+
+            </div>
+
+
+            <AnimatePresence>
+
+              {searchOpen &&
+                query.trim() && (
+
+                <motion.div
+                  className="search-pop"
+                  initial={{
+                    opacity: 0,
+                    y: -7,
+                    scale: 0.985,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -7,
+                    scale: 0.985,
+                  }}
+                  transition={{
+                    duration: 0.14,
+                  }}
+                  onPointerDown={(
+                    event,
+                  ) =>
+                    event.stopPropagation()
+                  }
+                >
+
+                  <div className="search-pop-head">
+
+                    <b>
+                      Results
+                    </b>
+
+                    <span>
+                      {loading
+                        ? 'Searching...'
+                        : `${searchResults.length} found`}
+                    </span>
+
+                  </div>
+
+
+                  <div className="search-results-scroll">
+
+                    {searchResults.map(
+                      (
+                        track,
+                      ) => (
+
+                        <button
+                          key={
+                            track.id
+                          }
+                          type="button"
+                          className="search-result-row"
+                          onClick={() =>
+                            void choose(
+                              track,
+                            )
+                          }
+                        >
+
+                          <Artwork
+                            track={track}
+                            className="mini-cover"
+                            iconSize={15}
+                          />
+
+
+                          <span className="search-result-info">
+
+                            <b>
+                              {
+                                track.title
+                              }
+                            </b>
+
+                            <small>
+                              {
+                                track.artist
+                              }{' '}
+                              ·{' '}
+                              {
+                                track.album
+                              }
+                            </small>
+
+                          </span>
+
+
+                          <Play
+                            size={15}
+                          />
+
+                        </button>
+
+                      ),
+                    )}
+
+
+                    {loading && (
+
+                      <div className="search-loading">
+
+                        <Activity
+                          size={17}
+                        />
+
+                        <span>
+                          Searching...
+                        </span>
+
+                      </div>
+
+                    )}
+
+
+                    {!loading &&
+                      !searchResults.length && (
+
+                      <div className="search-empty">
+
+                        {
+                          message ||
+                          'No worlds found.'
+                        }
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+                </motion.div>
+
+              )}
+
+            </AnimatePresence>
 
           </div>
 
@@ -1640,9 +2797,11 @@ export default function App() {
           <div className="top-actions">
 
             <button className="icon-btn">
+
               <Globe2
                 size={18}
               />
+
             </button>
 
 
@@ -1692,7 +2851,9 @@ export default function App() {
         </header>
 
 
-        {/* HERO */}
+        {/* ================================================================ */}
+        {/* HERO                                                             */}
+        {/* ================================================================ */}
 
         <section className="hero">
 
@@ -1702,8 +2863,7 @@ export default function App() {
 
               <span className="live-dot" />
 
-              YOUR PERSONAL
-              UNIVERSE
+              YOUR PERSONAL UNIVERSE
 
             </div>
 
@@ -1736,8 +2896,8 @@ export default function App() {
 
               <button
                 className="primary"
-                onClick={
-                  togglePlayback
+                onClick={() =>
+                  void togglePlayback()
                 }
               >
 
@@ -1862,7 +3022,9 @@ export default function App() {
         )}
 
 
-        {/* GALAXY */}
+        {/* ================================================================ */}
+        {/* GALAXY                                                           */}
+        {/* ================================================================ */}
 
         <section className="galaxy-card">
 
@@ -1925,12 +3087,12 @@ export default function App() {
 
               </div>
 
-            ) : tracks.length >
-              0 ? (
+            ) : tracks.length ? (
 
               <Suspense
                 fallback={
                   <div className="galaxy-loading">
+
                     <Activity
                       size={24}
                     />
@@ -1939,6 +3101,7 @@ export default function App() {
                       Initializing your
                       universe...
                     </span>
+
                   </div>
                 }
               >
@@ -1969,9 +3132,8 @@ export default function App() {
                 />
 
                 <span>
-                  Search for music
-                  to create your
-                  galaxy.
+                  Search for music to
+                  create your galaxy.
                 </span>
 
               </div>
@@ -2036,19 +3198,31 @@ export default function App() {
               </div>
 
 
-              <button
-                onClick={
-                  toggleFavorite
+              <motion.button
+                onClick={() =>
+                  void toggleFavorite()
                 }
+                animate={
+                  liked
+                    ? { scale: [1, 1.12, 0.96, 1.03, 1] }
+                    : { scale: 1 }
+                }
+                transition={{ duration: 0.3, ease: 'easeOut' }}
                 className={
                   liked
-                    ? 'liked'
-                    : ''
+                    ? 'liked like-button'
+                    : 'like-button'
+                }
+                aria-label={
+                  liked ? 'Unlike' : 'Like'
+                }
+                title={
+                  liked ? 'Unlike' : 'Like'
                 }
               >
 
                 <Heart
-                  size={17}
+                  size={18}
                   fill={
                     liked
                       ? 'currentColor'
@@ -2056,7 +3230,7 @@ export default function App() {
                   }
                 />
 
-              </button>
+              </motion.button>
 
             </div>
 
@@ -2065,7 +3239,9 @@ export default function App() {
         </section>
 
 
-        {/* CONTENT */}
+        {/* ================================================================ */}
+        {/* CONTENT                                                          */}
+        {/* ================================================================ */}
 
         <AnimatePresence mode="wait">
 
@@ -2133,7 +3309,10 @@ export default function App() {
                         index,
                       ) => (
 
-                        <div
+                        <motion.div
+                          whileHover={{
+                            x: 5,
+                          }}
                           className={
                             track.id ===
                             active.id
@@ -2148,7 +3327,7 @@ export default function App() {
                           <button
                             className="track-main"
                             onClick={() =>
-                              choose(
+                              void choose(
                                 track,
                               )
                             }
@@ -2169,11 +3348,13 @@ export default function App() {
                                   track.color,
                               }}
                             >
+
                               <Disc3
                                 size={
                                   15
                                 }
                               />
+
                             </span>
 
 
@@ -2239,15 +3420,14 @@ export default function App() {
 
                           </button>
 
-                        </div>
+                        </motion.div>
 
                       ),
                     )}
 
 
                   {!loading &&
-                    filtered.length ===
-                      0 && (
+                    !filtered.length && (
 
                     <div className="empty-state">
                       No tracks available.
@@ -2339,8 +3519,6 @@ export default function App() {
           )}
 
 
-          {/* LIBRARY */}
-
           {tab ===
             'Library' && (
 
@@ -2395,8 +3573,7 @@ export default function App() {
               </div>
 
 
-              {libraryTracks.length >
-              0 ? (
+              {libraryTracks.length ? (
 
                 <div className="cards">
 
@@ -2414,7 +3591,7 @@ export default function App() {
                           track.id
                         }
                         onClick={() =>
-                          choose(
+                          void choose(
                             track,
                           )
                         }
@@ -2423,14 +3600,23 @@ export default function App() {
                         <div
                           className="card-art"
                           style={{
-                            background:
-                              `radial-gradient(circle at 30% 30%, ${track.color}, #080811 65%)`,
+                            background: `radial-gradient(circle at 30% 30%, ${track.color}, #080811 65%)`,
                           }}
                         >
-
-                          <span>
-                            ✦
-                          </span>
+                          {track.artworkUrl ? (
+                            <img
+                              src={track.artworkUrl}
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              onError={(event) => {
+                                event.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          ) : (
+                            <span>✦</span>
+                          )}
 
                           <span className="card-play">
 
@@ -2484,7 +3670,6 @@ export default function App() {
                     is empty.
                   </p>
 
-
                   <label className="primary">
 
                     <Upload
@@ -2514,7 +3699,139 @@ export default function App() {
           )}
 
 
-          {/* PLAYLISTS */}
+          {tab ===
+            'Explore' && (
+
+            <motion.section
+              key="explore"
+              initial={{
+                opacity: 0,
+                y: 12,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              className="section-view"
+            >
+
+              <div className="section-heading">
+
+                <div>
+
+                  <span className="eyebrow">
+                    EXPLORE
+                  </span>
+
+                  <h2>
+                    Discover new worlds
+                  </h2>
+
+                </div>
+
+              </div>
+
+
+              <div className="cards">
+
+                {tracks.map(
+                  (
+                    track,
+                  ) => (
+
+                    <motion.button
+                      whileHover={{
+                        y: -6,
+                      }}
+                      className="music-card"
+                      key={
+                        track.id
+                      }
+                      onClick={() =>
+                        void choose(
+                          track,
+                        )
+                      }
+                    >
+
+                      <div
+                        className="card-art"
+                        style={{
+                          background: `radial-gradient(circle at 30% 30%, ${track.color}, #080811 65%)`,
+                        }}
+                      >
+
+                        {track.artworkUrl ? (
+                          <img
+                            src={track.artworkUrl}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            onError={(event) => {
+                              event.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <span>✦</span>
+                        )}
+
+                        <span className="card-play">
+
+                          <Play
+                            size={
+                              16
+                            }
+                          />
+
+                        </span>
+
+                      </div>
+
+
+                      <b>
+                        {
+                          track.title
+                        }
+                      </b>
+
+                      <small>
+                        {
+                          track.artist
+                        }
+                      </small>
+
+                      <span>
+                        {
+                          track.genre
+                        }{' '}
+                        ·{' '}
+                        {
+                          track.mood
+                        }
+                      </span>
+
+                    </motion.button>
+
+                  ),
+                )}
+
+              </div>
+
+
+              {!loading &&
+                !tracks.length && (
+
+                <div className="empty-state">
+                  No music found.
+                </div>
+
+              )}
+
+            </motion.section>
+
+          )}
+
 
           {tab ===
             'Playlists' && (
@@ -2565,8 +3882,7 @@ export default function App() {
               </div>
 
 
-              {playlists.length ===
-              0 ? (
+              {!playlists.length ? (
 
                 <div className="empty-state">
 
@@ -2577,7 +3893,6 @@ export default function App() {
                   <p>
                     No playlists yet.
                   </p>
-
 
                   <button
                     className="primary"
@@ -2809,11 +4124,6 @@ export default function App() {
                                 selectedPlaylist,
                               )
                             }
-                            disabled={
-                              !selectedPlaylist
-                                .trackIds
-                                .length
-                            }
                           >
 
                             <Play
@@ -2874,21 +4184,11 @@ export default function App() {
                                   </span>
 
 
-                                  <span
+                                  <Artwork
+                                    track={track}
                                     className="mini-cover"
-                                    style={{
-                                      background:
-                                        track.color,
-                                    }}
-                                  >
-
-                                    <Disc3
-                                      size={
-                                        15
-                                      }
-                                    />
-
-                                  </span>
+                                    iconSize={15}
+                                  />
 
 
                                   <button
@@ -2927,6 +4227,7 @@ export default function App() {
 
 
                                   <button
+                                    className="track-remove"
                                     onClick={() =>
                                       void removeFromPlaylist(
                                         selectedPlaylist.id,
@@ -2992,138 +4293,14 @@ export default function App() {
 
           )}
 
-
-          {/* EXPLORE */}
-
-          {tab ===
-            'Explore' && (
-
-            <motion.section
-              key="explore"
-              initial={{
-                opacity: 0,
-                y: 12,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              className="section-view"
-            >
-
-              <div className="section-heading">
-
-                <div>
-
-                  <span className="eyebrow">
-                    EXPLORE
-                  </span>
-
-                  <h2>
-                    Discover new worlds
-                  </h2>
-
-                </div>
-
-              </div>
-
-
-              <div className="cards">
-
-                {tracks.map(
-                  (
-                    track,
-                  ) => (
-
-                    <motion.button
-                      whileHover={{
-                        y: -6,
-                      }}
-                      className="music-card"
-                      key={
-                        track.id
-                      }
-                      onClick={() =>
-                        choose(
-                          track,
-                        )
-                      }
-                    >
-
-                      <div
-                        className="card-art"
-                        style={{
-                          background:
-                            `radial-gradient(circle at 30% 30%, ${track.color}, #080811 65%)`,
-                        }}
-                      >
-
-                        <span>
-                          ✦
-                        </span>
-
-                        <span className="card-play">
-
-                          <Play
-                            size={
-                              16
-                            }
-                          />
-
-                        </span>
-
-                      </div>
-
-
-                      <b>
-                        {
-                          track.title
-                        }
-                      </b>
-
-                      <small>
-                        {
-                          track.artist
-                        }
-                      </small>
-
-                      <span>
-                        {
-                          track.genre
-                        }{' '}
-                        ·{' '}
-                        {
-                          track.mood
-                        }
-                      </span>
-
-                    </motion.button>
-
-                  ),
-                )}
-
-              </div>
-
-
-              {!loading &&
-                !tracks.length && (
-
-                <div className="empty-state">
-                  No music found.
-                </div>
-
-              )}
-
-            </motion.section>
-
-          )}
-
         </AnimatePresence>
 
       </main>
 
 
-      {/* EXPANDED PLAYER */}
+      {/* ================================================================== */}
+      {/* EXPANDED PLAYER                                                    */}
+      {/* ================================================================== */}
 
       <AnimatePresence>
 
@@ -3150,22 +4327,34 @@ export default function App() {
                 )
               }
             >
+
               <X />
+
             </button>
 
 
             <div
               className="big-art"
               style={{
-                background:
-                  `radial-gradient(circle at 30% 20%, ${active.color}, #080811 62%)`,
+                background: active.artworkUrl
+                  ? '#080811'
+                  : `radial-gradient(circle at 30% 20%, ${active.color}, #080811 62%)`,
               }}
             >
-
-              <Disc3
-                size={90}
-              />
-
+              {active.artworkUrl ? (
+                <img
+                  src={active.artworkUrl}
+                  alt=""
+                  loading="eager"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none'
+                  }}
+                />
+              ) : (
+                <Disc3 size={90} />
+              )}
             </div>
 
 
@@ -3198,59 +4387,23 @@ export default function App() {
             </div>
 
 
-            <Visualizer
-              playing={
-                playing
-              }
-              color={
-                active.color
-              }
-            />
-
-
-            <div className="progress">
-
-              <span>
-                {
-                  formatTime(
-                    currentTime,
-                  )
-                }
+            <div className="expanded-seek">
+              <span className="expanded-time expanded-time-current">
+                {formatTime(currentTime)}
               </span>
 
-
-              <input
-                type="range"
-                min="0"
-                max={
-                  duration ||
-                  active.duration ||
-                  1
-                }
-                value={Math.min(
-                  currentTime,
-                  duration ||
-                    active.duration ||
-                    1,
-                )}
-                onChange={
-                  handleSeek
-                }
+              <PlayerWave
+                playing={playing}
+                color={active.color}
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={seekTo}
               />
 
-
-              <span>
-                {
-                  formatTime(
-                    duration ||
-                      active.duration ||
-                      0,
-                  )
-                }
+              <span className="expanded-time expanded-time-end">
+                {formatTime(duration)}
               </span>
-
             </div>
-
 
             <div className="big-controls">
 
@@ -3263,40 +4416,51 @@ export default function App() {
                 onClick={
                   toggleShuffle
                 }
+                aria-pressed={shuffle}
+                aria-label={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
+                title={shuffle ? 'Shuffle on' : 'Shuffle off'}
               >
+
                 <Shuffle />
+
               </button>
 
 
               <button
-                onClick={
-                  previous
+                onClick={() =>
+                  void previous()
                 }
               >
+
                 <SkipBack />
+
               </button>
 
 
               <button
                 className="play-big"
-                onClick={
-                  togglePlayback
+                onClick={() =>
+                  void togglePlayback()
                 }
               >
+
                 {playing ? (
                   <Pause />
                 ) : (
                   <Play />
                 )}
+
               </button>
 
 
               <button
-                onClick={
-                  next
+                onClick={() =>
+                  void next()
                 }
               >
+
                 <SkipForward />
+
               </button>
 
 
@@ -3310,8 +4474,16 @@ export default function App() {
                 onClick={
                   cycleRepeat
                 }
+                aria-pressed={repeat !== 'off'}
+                aria-label={repeatLabel}
+                title={repeatLabel}
               >
+
                 <Repeat2 />
+                {repeat === 'one' && (
+                  <span className="repeat-mode-badge">1</span>
+                )}
+
               </button>
 
             </div>
@@ -3323,73 +4495,80 @@ export default function App() {
       </AnimatePresence>
 
 
-      {/* BOTTOM PLAYER */}
+      {/* ================================================================== */}
+      {/* BOTTOM PLAYER                                                      */}
+      {/* ================================================================== */}
 
       <footer
         className="player"
         onClick={(
           event,
         ) => {
-
           if (
             (
               event.target as HTMLElement
             ).closest(
-              'button,input',
+              'button,input,.player-wave',
             )
           ) {
             return
           }
 
-          setShowPlayer(
-            true,
-          )
-
+          setShowPlayer(true)
         }}
       >
 
-        <div className="current">
+        <div className="player-left">
 
-          <div
-            className="mini-cover"
-            style={{
-              background:
-                active.color,
-            }}
-          >
+          <div className="current">
 
-            <Disc3
-              size={15}
-            />
+            <div ref={currentArtworkRef}>
+              <Artwork
+                track={active}
+                className="mini-cover"
+                iconSize={15}
+              />
+            </div>
 
-          </div>
-
-
-          <div>
-
-            <b>
-              {
-                active.title
-              }
-            </b>
-
-            <small>
-              {
-                active.artist
-              }
-            </small>
+            <div>
+              <b>{active.title}</b>
+              <small>{active.artist}</small>
+            </div>
 
           </div>
 
-        </div>
-
-
-        <div className="player-controls">
+          <div className="player-controls">
 
           <button
-            onClick={
-              previous
+            className={
+              shuffle
+                ? 'control-active'
+                : ''
             }
+            onClick={() => {
+              toggleShuffle()
+            }}
+            aria-label={
+              shuffle
+                ? 'Disable shuffle'
+                : 'Enable shuffle'
+            }
+            title={
+              shuffle
+                ? 'Shuffle on'
+                : 'Shuffle off'
+            }
+            aria-pressed={shuffle}
+            data-active={shuffle ? 'true' : 'false'}
+          >
+            <Shuffle />
+          </button>
+
+
+          <button
+            onClick={() => void previous()}
+            aria-label="Previous track"
+            title="Previous"
           >
             <SkipBack />
           </button>
@@ -3397,54 +4576,112 @@ export default function App() {
 
           <button
             className="play"
-            onClick={
-              togglePlayback
+            onClick={() => void togglePlayback()}
+            aria-label={
+              playing
+                ? 'Pause'
+                : 'Play'
+            }
+            title={
+              playing
+                ? 'Pause'
+                : 'Play'
             }
           >
-
             {playing ? (
               <Pause />
             ) : (
               <Play />
             )}
-
           </button>
 
 
           <button
-            onClick={
-              next
-            }
+            onClick={() => void next()}
+            aria-label="Next track"
+            title="Next"
           >
             <SkipForward />
           </button>
+
+
+          <button
+            className={
+              repeat !== 'off'
+                ? 'control-active'
+                : ''
+            }
+            onClick={() => {
+              cycleRepeat()
+            }}
+            aria-pressed={repeat !== 'off'}
+            aria-label={repeatLabel}
+            title={repeatLabel}
+            data-active={repeat !== 'off' ? 'true' : 'false'}
+          >
+            <Repeat2 />
+            {repeat === 'one' && (
+              <span className="repeat-mode-badge">1</span>
+            )}
+          </button>
+
+          </div>
+
+        </div>
+
+
+        <div className="player-seek">
+
+          <span className="player-time player-time-current">
+            {formatTime(currentTime)}
+          </span>
+
+          <div className="player-wave-container">
+            <PlayerWave
+              playing={playing}
+              color={active.color}
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={seekTo}
+            />
+          </div>
+
+          <span className="player-time player-time-end">
+            {formatTime(duration)}
+          </span>
 
         </div>
 
 
         <div className="player-right">
 
-          <Visualizer
-            playing={
-              playing
+          <motion.button
+            ref={likeButtonRef}
+            animate={
+              liked
+                ? { scale: [1, 1.16, 0.94, 1.05, 1] }
+                : { scale: 1 }
             }
-            color={
-              active.color
-            }
-          />
-
-
-          <button
-            onClick={
-              toggleFavorite
-            }
+            transition={{ duration: 0.34, ease: 'easeOut' }}
             className={
               liked
-                ? 'liked'
-                : ''
+                ? 'liked player-action like-button'
+                : 'player-action like-button'
+            }
+            onClick={() =>
+              void toggleFavorite()
+            }
+            aria-label={
+              liked
+                ? 'Unlike'
+                : 'Like'
+            }
+            title={
+              liked
+                ? 'Unlike'
+                : 'Like'
             }
           >
-
             <Heart
               size={18}
               fill={
@@ -3453,150 +4690,78 @@ export default function App() {
                   : 'none'
               }
             />
+          </motion.button>
 
-          </button>
+
+          <div className="volume-control">
+
+            <button
+              className="volume-button"
+              onClick={toggleMute}
+              aria-label={
+                muted || volume === 0
+                  ? 'Unmute'
+                  : 'Mute'
+              }
+              title={
+                muted || volume === 0
+                  ? 'Unmute'
+                  : 'Mute'
+              }
+            >
+              {muted || volume === 0 ? (
+                <VolumeX size={17} />
+              ) : (
+                <Volume2 size={17} />
+              )}
+            </button>
 
 
-          <button
-            onClick={
-              toggleMute
-            }
-          >
+            <div className="volume-slider-wrap">
 
-            {muted ||
-            volume ===
-              0 ? (
-              <VolumeX
-                size={18}
+              <input
+                className="volume-slider"
+                type="range"
+                min="0"
+                max="100"
+                value={
+                  muted
+                    ? 0
+                    : volume
+                }
+                style={
+                  {
+                    '--volume-fill':
+                      `${muted ? 0 : volume}%`,
+                  } as CSSProperties
+                }
+                onChange={handleVolume}
+                aria-label="Volume"
               />
-            ) : (
-              <Volume2
-                size={18}
-              />
-            )}
 
-          </button>
+              <span className="volume-value">
+                {muted ? 0 : volume}
+              </span>
 
+            </div>
 
-          <input
-            className="volume"
-            type="range"
-            min="0"
-            max="100"
-            value={
-              muted
-                ? 0
-                : volume
-            }
-            onChange={
-              handleVolume
-            }
-          />
+          </div>
 
         </div>
 
       </footer>
 
-
-      {/* SEARCH */}
-
-      {query && (
-
-        <div className="search-pop">
-
-          <div className="search-pop-head">
-
-            <b>
-              Results
-            </b>
-
-            <span>
-              {loading
-                ? 'Searching...'
-                : `${filtered.length} found`}
-            </span>
-
-          </div>
+      <LikeHeartBurst
+        trigger={likeBurst}
+        direction={likeBurstDirection}
+        sourceRef={likeButtonRef}
+        destinationRef={currentArtworkRef}
+      />
 
 
-          {filtered.map(
-            (
-              track,
-            ) => (
-
-              <button
-                key={
-                  track.id
-                }
-                onClick={() =>
-                  choose(
-                    track,
-                  )
-                }
-              >
-
-                <span
-                  className="mini-cover"
-                  style={{
-                    background:
-                      track.color,
-                  }}
-                >
-
-                  <Disc3
-                    size={14}
-                  />
-
-                </span>
-
-
-                <span>
-
-                  <b>
-                    {
-                      track.title
-                    }
-                  </b>
-
-                  <small>
-                    {
-                      track.artist
-                    }{' '}
-                    ·{' '}
-                    {
-                      track.album
-                    }
-                  </small>
-
-                </span>
-
-
-                <Play
-                  size={15}
-                />
-
-              </button>
-
-            ),
-          )}
-
-
-          {!loading &&
-            filtered.length ===
-              0 && (
-
-            <p>
-              No worlds found.
-            </p>
-
-          )}
-
-        </div>
-
-      )}
-
-
-      {/* CREATE PLAYLIST */}
+      {/* ================================================================== */}
+      {/* CREATE PLAYLIST                                                    */}
+      {/* ================================================================== */}
 
       <AnimatePresence>
 
@@ -3613,6 +4778,11 @@ export default function App() {
             exit={{
               opacity: 0,
             }}
+            onPointerDown={() =>
+              setPlaylistDialog(
+                false,
+              )
+            }
           >
 
             <motion.div
@@ -3632,6 +4802,11 @@ export default function App() {
                 scale: 0.96,
                 y: 12,
               }}
+              onPointerDown={(
+                event,
+              ) =>
+                event.stopPropagation()
+              }
             >
 
               <div className="modal-head">
@@ -3657,7 +4832,9 @@ export default function App() {
                     )
                   }
                 >
+
                   <X />
+
                 </button>
 
               </div>
@@ -3744,7 +4921,9 @@ export default function App() {
       </AnimatePresence>
 
 
-      {/* ADD TO PLAYLIST */}
+      {/* ================================================================== */}
+      {/* ADD TO PLAYLIST                                                    */}
+      {/* ================================================================== */}
 
       <AnimatePresence>
 
@@ -3761,7 +4940,7 @@ export default function App() {
             exit={{
               opacity: 0,
             }}
-            onClick={() =>
+            onPointerDown={() =>
               setAddMenuTrack(
                 null,
               )
@@ -3782,7 +4961,7 @@ export default function App() {
                 opacity: 0,
                 scale: 0.96,
               }}
-              onClick={(
+              onPointerDown={(
                 event,
               ) =>
                 event.stopPropagation()
