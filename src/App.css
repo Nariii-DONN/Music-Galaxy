@@ -48,6 +48,58 @@ button {
   border: 0;
   color: inherit;
   cursor: pointer;
+  transform-origin: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 180ms cubic-bezier(.22,1.25,.36,1), filter 180ms ease, box-shadow 190ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+@keyframes musicGalaxyButtonBounce {
+  0% { transform: translateY(0) scale(1); }
+  38% { transform: translateY(-6px) scale(1.045); }
+  68% { transform: translateY(-2px) scale(1.018); }
+  100% { transform: translateY(-4px) scale(1.035); }
+}
+
+button:not(:disabled):hover {
+  animation: musicGalaxyButtonBounce 360ms cubic-bezier(.22,1.25,.36,1) both;
+  filter: brightness(1.08);
+  box-shadow: 0 0 14px rgba(139,92,246,.32), 0 0 26px rgba(139,92,246,.14);
+}
+button:not(:disabled):hover svg {
+  color: #c8b0ff;
+  stroke: #c8b0ff;
+  filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 11px rgba(139,92,246,1)) drop-shadow(0 0 20px rgba(124,58,237,.48));
+}
+button:not(:disabled):active {
+  animation: none;
+  transform: translateY(4px) scale(.90);
+  filter: brightness(1.14);
+  box-shadow: 0 0 0 2px rgba(167,139,250,.20), 0 0 22px rgba(139,92,246,.72), 0 0 42px rgba(124,58,237,.34), inset 0 0 14px rgba(139,92,246,.14);
+}
+button:not(:disabled):active svg {
+  color: #c8b0ff;
+  stroke: #c8b0ff;
+  filter: drop-shadow(0 0 5px rgba(196,181,253,1)) drop-shadow(0 0 15px rgba(139,92,246,1)) drop-shadow(0 0 28px rgba(124,58,237,.76));
+}
+button.active, button.selected, button.control-active, button[data-active="true"], button[aria-pressed="true"] {
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(124,58,237,.10)) !important;
+  border-color: rgba(167,139,250,.42) !important;
+  box-shadow: 0 0 0 1px rgba(167,139,250,.10), 0 0 18px rgba(139,92,246,.34) !important;
+}
+button.active svg, button.selected svg, button.control-active svg, button[data-active="true"] svg, button[aria-pressed="true"] svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 12px rgba(139,92,246,.95));
+}
+button.active:not(:disabled):hover, button.selected:not(:disabled):hover, button.control-active:not(:disabled):hover, button[data-active="true"]:not(:disabled):hover, button[aria-pressed="true"]:not(:disabled):hover {
+  animation: musicGalaxyButtonBounce 360ms cubic-bezier(.22,1.25,.36,1) both;
+  box-shadow: 0 0 0 1px rgba(167,139,250,.16), 0 0 24px rgba(139,92,246,.52), 0 0 38px rgba(124,58,237,.20) !important;
+}
+button.active:not(:disabled):active, button.selected:not(:disabled):active, button.control-active:not(:disabled):active, button[data-active="true"]:not(:disabled):active, button[aria-pressed="true"]:not(:disabled):active {
+  animation: none;
+  transform: translateY(4px) scale(.90) !important;
+  box-shadow: 0 0 0 2px rgba(167,139,250,.24), 0 0 26px rgba(139,92,246,.82), 0 0 48px rgba(124,58,237,.42), inset 0 0 15px rgba(139,92,246,.17) !important;
 }
 
 button:disabled {
@@ -906,7 +958,13 @@ input:focus-visible {
   font-weight: 700;
 
   font-size: 12px;
+  cursor: pointer; transform-origin: center;
+  transition: transform 180ms cubic-bezier(.22,1.25,.36,1), filter 180ms ease, box-shadow 190ms ease;
 }
+.publish:hover, .primary:hover { animation: musicGalaxyButtonBounce 360ms cubic-bezier(.22,1.25,.36,1) both; filter: brightness(1.10); box-shadow: 0 10px 34px rgba(112,72,227,.34), 0 0 22px rgba(139,92,246,.42); }
+.publish:hover svg, .primary:hover svg { filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 12px rgba(139,92,246,.95)); }
+.publish:active, .primary:active { animation: none; transform: translateY(4px) scale(.93); filter: brightness(1.15); box-shadow: 0 0 0 2px rgba(167,139,250,.22), 0 0 26px rgba(139,92,246,.78), 0 0 44px rgba(124,58,237,.34), inset 0 0 14px rgba(139,92,246,.14); }
+.publish:active svg, .primary:active svg { filter: drop-shadow(0 0 5px rgba(196,181,253,1)) drop-shadow(0 0 15px rgba(139,92,246,1)); }
 
 .mobile-menu {
   display: none;
@@ -1100,8 +1158,6 @@ input:focus-visible {
 
 .canvas-wrap {
   height: 490px;
-
-  position: relative;
 }
 
 .galaxy-label {
@@ -1663,15 +1719,12 @@ input:focus-visible {
 }
 
 .card-art {
-  position: relative;
 
   aspect-ratio: 1;
 
   display: grid;
 
   place-items: center;
-
-  overflow: hidden;
 
   margin-bottom: 10px;
 
@@ -1784,14 +1837,6 @@ input:focus-visible {
   height: 84px;
 
   display: flex;
-
-  align-items: center;
-
-  gap: 18px;
-
-  padding:
-    0
-    22px;
 
   border-top:
     1px solid
@@ -2229,12 +2274,6 @@ input:focus-visible {
 .volume-control {
   height: 40px;
 
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
   padding:
     3px
     7px
@@ -2272,12 +2311,6 @@ input:focus-visible {
 
 .volume-slider-wrap {
   width: 104px;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 6px;
 }
 
 .volume-slider {
@@ -2438,22 +2471,9 @@ input:focus-visible {
 .volume-value {
   width: 24px;
 
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.55
-    );
-
-  font-size: 9px;
-
   font-weight: 700;
 
   text-align: right;
-
-  font-variant-numeric:
-    tabular-nums;
 }
 
 .player-expanded {
@@ -2665,7 +2685,7 @@ input:focus-visible {
     transform 150ms ease;
 }
 
-.big-controls button svg {
+.big-controls button:not(.like-button) svg {
   color: #fff;
 
   stroke: #fff;
@@ -2688,44 +2708,23 @@ input:focus-visible {
 
 .big-controls
   .play-big {
-  width: 60px;
-  height: 60px;
-
-  border-radius: 50%;
-
-  background:
-    linear-gradient(
-      135deg,
-      #c3adff,
-      #9d7cff,
-      #7148e8
-    );
-
-  color: #05040a;
-
-  box-shadow:
-    0 0 0 4px
-      rgba(
-        139,
-        92,
-        246,
-        0.08
-      ),
-    0 12px 40px
-      rgba(
-        124,
-        58,
-        237,
-        0.4
-      );
-}
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(145deg,#d4c4ff 0%,#a78bfa 52%,#7245eb 100%) !important;
+    color: #090812 !important;
+    box-shadow:
+      0 0 0 2px rgba(139,92,246,.22),
+      0 8px 30px rgba(124,58,237,.34) !important;
+  }
 
 .big-controls
   .play-big
   svg {
-  color: #05040a;
-
-  stroke: #05040a;
+  width: 23px;
+  height: 23px;
+  color: #090812;
+  stroke: #090812;
 }
 
 .playlist-layout {
@@ -3628,7 +3627,6 @@ input:focus-visible {
   }
 }
 
-
 .artwork {
   position: relative;
   overflow: hidden;
@@ -3677,56 +3675,10 @@ input:focus-visible {
   object-fit: cover;
 }
 
-
 /* ============================================================
    FINAL BOTTOM PLAYER LAYOUT FIX
    Prevent control/wave/time overlap.
    ============================================================ */
-
-.player {
-  display: grid !important;
-  grid-template-columns:
-    minmax(180px, 24%)
-    max-content
-    minmax(240px, 1fr)
-    max-content;
-  align-items: center;
-  gap: 18px;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.player > .current,
-.player > .player-controls,
-.player > .player-seek,
-.player > .player-right {
-  min-width: 0;
-}
-
-.player > .current {
-  width: 100%;
-}
-
-.player > .player-controls {
-  width: max-content;
-  margin: 0 !important;
-  flex: none !important;
-  gap: 10px;
-  justify-content: center;
-}
-
-.player > .player-controls button {
-  flex: 0 0 auto;
-}
-
-.player > .player-seek {
-  min-width: 0;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 36px minmax(110px, 1fr) 36px;
-  align-items: center;
-  gap: 8px;
-}
 
 .player-time {
   display: block;
@@ -3747,31 +3699,10 @@ input:focus-visible {
 }
 
 .player > .player-seek .player-wave-container {
-  min-width: 0 !important;
-  width: 100%;
   flex: none !important;
 }
 
-.player > .player-seek .player-wave {
-  width: 100%;
-  min-width: 0;
-}
-
-.player > .player-right {
-  width: max-content;
-  min-width: max-content;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
 .player > .player-right .volume-control {
-  flex: 0 0 auto;
-}
-
-.player > .player-right .player-action,
-.player > .player-right .volume-button {
   flex: 0 0 auto;
 }
 
@@ -3779,20 +3710,6 @@ input:focus-visible {
 .player > .player-controls button:not(.play) {
   color: #fff !important;
   background: transparent;
-}
-
-.player > .player-controls button:not(.play):hover {
-  background: rgba(255,255,255,.07);
-}
-
-.player > .player-controls button.control-active {
-  color: #b99cff !important;
-  background: rgba(139,92,246,.12) !important;
-}
-
-.player > .player-controls button.control-active svg {
-  color: #b99cff !important;
-  stroke: #b99cff !important;
 }
 
 /* ============================================================
@@ -3920,14 +3837,12 @@ input:focus-visible {
   }
 }
 
-
 /* ============================================================
    FINAL PLAYER LAYOUT
    LEFT: TRACK + CONTROLS | CENTER: TIME + WAVE | RIGHT: LIKE + VOLUME
    ============================================================ */
 
 .player {
-  display: grid !important;
   grid-template-columns:
     minmax(220px, 25%)
     max-content
@@ -4048,7 +3963,6 @@ input:focus-visible {
 
 .player > .player-seek .player-wave-container {
   width: 100%;
-  min-width: 0 !important;
   height: 38px;
 }
 
@@ -4079,7 +3993,6 @@ input:focus-visible {
 }
 
 .player > .player-right .player-action.liked {
-  color: #f472b6 !important;
   border-color: rgba(244,114,182,.22);
   background: rgba(244,114,182,.08);
 }
@@ -4194,7 +4107,6 @@ input:focus-visible {
   }
 }
 
-
 /* =====================================================================
    MUSICGALAXY — FINAL PLAYER DESIGN
    Layout:
@@ -4286,6 +4198,7 @@ input:focus-visible {
 .player-left .player-controls > button.control-active,
 .player-left .player-controls > button[data-active="true"] {
   color: #c5abff !important;
+  transform: scale(0.96) !important;
   background: rgba(139,92,246,.18) !important;
   box-shadow:
     inset 0 0 0 1px rgba(167,139,250,.34),
@@ -4296,6 +4209,9 @@ input:focus-visible {
 .player-left .player-controls > button[data-active="true"] svg {
   color: #c5abff !important;
   stroke: #c5abff !important;
+  filter:
+    drop-shadow(0 0 3px rgba(167,139,250,.95))
+    drop-shadow(0 0 8px rgba(139,92,246,.72));
 }
 
 .player-left .player-controls > button.play {
@@ -4312,16 +4228,16 @@ input:focus-visible {
 .player-left .player-controls > button.play svg {
   width: 23px !important;
   height: 23px !important;
-  color: #090812 !important;
-  stroke: #090812 !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .repeat-mode-badge {
   position: absolute !important;
   right: 3px !important;
   bottom: 3px !important;
-  width: 12px !important;
-  height: 12px !important;
+  width: 13px !important;
+  height: 13px !important;
   display: grid !important;
   place-items: center !important;
   border-radius: 50% !important;
@@ -4378,24 +4294,7 @@ input:focus-visible {
 .player > .player-right {
   width: max-content !important;
   min-width: max-content !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 9px !important;
   margin-left: auto !important;
-}
-
-.player > .player-right .player-action,
-.player > .player-right .volume-button {
-  flex: 0 0 auto !important;
-  width: 38px !important;
-  height: 38px !important;
-  display: grid !important;
-  place-items: center !important;
-  border-radius: 10px !important;
-  color: #ffffff !important;
-  background: rgba(255,255,255,.025) !important;
-  border: 1px solid rgba(255,255,255,.07) !important;
 }
 
 .player > .player-right .player-action:hover,
@@ -4476,6 +4375,7 @@ input:focus-visible {
 .player-expanded .big-controls button.control-active,
 .player-expanded .big-controls button[data-active="true"] {
   color: #c5abff !important;
+  transform: scale(0.96) !important;
   background: rgba(139,92,246,.18) !important;
   box-shadow:
     inset 0 0 0 1px rgba(167,139,250,.28),
@@ -4486,6 +4386,9 @@ input:focus-visible {
 .player-expanded .big-controls button[data-active="true"] svg {
   color: #c5abff !important;
   stroke: #c5abff !important;
+  filter:
+    drop-shadow(0 0 3px rgba(167,139,250,.95))
+    drop-shadow(0 0 8px rgba(139,92,246,.72));
 }
 
 /* ================================================================
@@ -4627,1148 +4530,2144 @@ input:focus-visible {
   }
 }
 
+/* ==========================================================================
+   MUSIC GALAXY — AUTHORITATIVE PLAYER / OVERLAY STYLES
+   --------------------------------------------------------------------------
+   One definition per feature. No historical override chains.
+   ========================================================================== */
 
-
-
-/* ============================================================
-   LIKE BUTTON + SLOW PINK HEART PROJECTILES
-   ============================================================ */
+/* --------------------------------------------------------------------------
+   SHARED THEME TOKENS
+   -------------------------------------------------------------------------- */
 
 :root {
   --like-pink: #ff69b4;
-  --like-pink-bright: #ff5cab;
-  --like-pink-soft: rgba(255, 105, 180, 0.16);
-  --like-pink-border: rgba(255, 105, 180, 0.44);
+  --like-pink-bright: #ff69b4;
+
+  --control-hover-bg: rgba(139, 92, 246, 0.16);
+  --control-hover-border: rgba(167, 139, 250, 0.42);
+  --control-hover-shadow:
+    inset 0 0 0 1px rgba(167, 139, 250, 0.06),
+    0 0 0 1px rgba(167, 139, 250, 0.06),
+    0 0 14px rgba(139, 92, 246, 0.20);
+
+  --control-press-bg: rgba(139, 92, 246, 0.23);
+  --control-press-border: rgba(196, 181, 253, 0.55);
+  --control-press-shadow:
+    inset 0 0 0 1px rgba(196, 181, 253, 0.10),
+    0 0 20px rgba(139, 92, 246, 0.52),
+    0 0 34px rgba(124, 58, 237, 0.34);
+
+  --control-active-bg: rgba(139, 92, 246, 0.18);
+  --control-active-border: rgba(167, 139, 250, 0.34);
+  --control-active-shadow:
+    inset 0 0 0 1px rgba(167, 139, 250, 0.08),
+    0 0 16px rgba(139, 92, 246, 0.18);
 }
 
-.like-button {
-  color: var(--like-pink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  outline: none !important;
+/* --------------------------------------------------------------------------
+   PLAYER CONTROL INTERACTION
+   Default controls = purple. Like = pink only.
+   -------------------------------------------------------------------------- */
+.player .player-controls > button, .player > .player-seek > .add-playlist-button, .player > .player-right .player-action, .player > .player-right .volume-button, .player-expanded .big-controls > button {
+  position: relative; width: 38px; height: 38px; min-width: 38px; min-height: 38px; padding: 0; display: grid; place-items: center; border: 1px solid transparent; border-radius: 10px; background: transparent; color: #fff; transform-origin: center;
+  transition: transform 180ms cubic-bezier(.22,1.25,.36,1), background-color 180ms ease, border-color 180ms ease, box-shadow 190ms ease, filter 180ms ease, color 180ms ease;
 }
 
-.like-button:hover,
-.like-button:focus-visible {
-  color: var(--like-pink-bright) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+.player .player-controls > button:not(.play):not(:disabled):hover svg, .player > .player-seek > .add-playlist-button:not(:disabled):hover svg, .player > .player-right .player-action:not(.like-button):not(:disabled):hover svg, .player > .player-right .volume-button:not(:disabled):hover svg, .player-expanded .big-controls > button:not(.play-big):not(.like-button):not(:disabled):hover svg {
+  color: #c8b0ff !important; stroke: #c8b0ff !important; 
+  filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 12px rgba(139,92,246,1)) drop-shadow(0 0 22px rgba(124,58,237,.52));
+}
+.player .player-controls > button:not(.play):not(:disabled):active, .player > .player-seek > .add-playlist-button:not(:disabled):active, .player > .player-right .player-action:not(.like-button):not(:disabled):active, .player > .player-right .volume-button:not(:disabled):active, .player-expanded .big-controls > button:not(.play-big):not(.like-button):not(:disabled):active {
+  animation: none; transform: translateY(4px) scale(.90) !important; background: linear-gradient(135deg, rgba(139,92,246,.30), rgba(124,58,237,.16)) !important; border-color: rgba(196,181,253,.60) !important; box-shadow: 0 0 0 2px rgba(167,139,250,.22), 0 0 26px rgba(139,92,246,.82), 0 0 46px rgba(124,58,237,.42), inset 0 0 15px rgba(139,92,246,.16) !important; filter: brightness(1.15);
+}
+.player .player-controls > button:not(.play):not(:disabled):active svg, .player > .player-seek > .add-playlist-button:not(:disabled):active svg, .player > .player-right .player-action:not(.like-button):not(:disabled):active svg, .player > .player-right .volume-button:not(:disabled):active svg, .player-expanded .big-controls > button:not(.play-big):not(.like-button):not(:disabled):active svg {
+  color: #c8b0ff !important; stroke: #c8b0ff !important; filter: drop-shadow(0 0 5px rgba(196,181,253,1)) drop-shadow(0 0 15px rgba(139,92,246,1)) drop-shadow(0 0 28px rgba(124,58,237,.80));
+}
+.player .player-controls > .play, .player-expanded .big-controls > .play-big { border-radius: 50%; }
+.player .player-controls > button.control-active, .player .player-controls > button[aria-pressed="true"], .player > .player-seek > .add-playlist-button.control-active, .player > .player-seek > .add-playlist-button[aria-pressed="true"], .player > .player-right .volume-button[aria-pressed="true"], .player-expanded .big-controls > button.control-active:not(.like-button), .player-expanded .big-controls > button[aria-pressed="true"]:not(.like-button) {
+  color: #c8b0ff !important; 
+  background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(124,58,237,.10)) !important; 
+  border: 2px solid rgba(196,181,253,.85) !important; 
+  box-shadow: 0 0 0 1px rgba(167,139,250,.10), 0 0 20px rgba(139,92,246,.36) !important;
+}
+.player .player-controls > button.control-active svg, .player .player-controls > button[aria-pressed="true"] svg, .player > .player-seek > .add-playlist-button.control-active svg, .player > .player-seek > .add-playlist-button[aria-pressed="true"] svg, .player > .player-right .volume-button[aria-pressed="true"] svg, .player-expanded .big-controls > button.control-active:not(.like-button) svg, .player-expanded .big-controls > button[aria-pressed="true"]:not(.like-button) svg {
+  color: #c8b0ff !important; 
+  stroke: #c8b0ff !important; 
+  border: rgba(167,139,250,.60) !important;
+  filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 12px rgba(139,92,246,.95));
 }
 
-.like-button.liked {
-  color: var(--like-pink-bright) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+/* --------------------------------------------------------------------------
+   NORMAL PLAYER — FINAL STRUCTURE
+   current time → wave → end time → add playlist → like → volume
+   -------------------------------------------------------------------------- */
+
+.player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+
+  height: 84px;
+  width: 100%;
+  padding: 0 18px;
+
+  display: grid;
+  grid-template-columns:
+    minmax(420px, 34%)
+    minmax(280px, 1fr)
+    minmax(330px, 28%);
+
+  align-items: center;
+  column-gap: 18px;
+
+  min-width: 0;
+  overflow: hidden;
 }
 
-.planet-tooltip .like-button {
-  color: var(--like-pink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+.player-left {
+  min-width: 0;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 22px;
 }
 
-.planet-tooltip .like-button.liked {
-  color: var(--like-pink-bright) !important;
+.player-left .current {
+  width: auto;
+  min-width: 150px;
+  max-width: 230px;
+  flex: 1 1 190px;
+}
+
+.player-left .player-controls {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: max-content;
+  margin: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.player-left .player-controls > button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #fff;
+}
+
+.player-left .player-controls > button.play {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,#d4c4ff 0%,#a78bfa 52%,#7245eb 100%);
+  color: #090812;
+  box-shadow:
+    0 0 0 2px rgba(139,92,246,.22),
+    0 8px 30px rgba(124,58,237,.34);
+}
+
+.player-left .player-controls > button:not(.play) svg {
+  width: 18px;
+  height: 18px;
+}
+
+.player-left .player-controls > button.play svg {
+  width: 23px;
+  height: 23px;
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+/* Seek now owns the Add to Playlist action immediately after end time. */
+.player > .player-seek {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns:
+    42px
+    minmax(100px,1fr)
+    42px
+    38px;
+
+  align-items: center;
+  gap: 8px;
+}
+
+.player > .player-seek .player-time {
+  width: 42px;
+  min-width: 42px;
+  color: rgba(255,255,255,.62);
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.player > .player-seek .player-time-current {
+  text-align: right;
+}
+
+.player > .player-seek .player-time-end {
+  text-align: left;
+}
+
+.player > .player-seek .player-wave-container,
+.player > .player-seek .player-wave {
+  width: 100%;
+  min-width: 0;
+}
+
+.player > .player-seek .player-wave-container {
+  height: 38px;
+  overflow: visible;
+}
+
+.player > .player-seek > .add-playlist-button {
+  grid-column: 4;
+  grid-row: 1;
+
+  width: 38px;
+  height: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+
+  background: rgba(255,255,255,.035);
+  color: rgba(255,255,255,.62);
+}
+
+.player > .player-seek > .add-playlist-button.control-active,
+.player > .player-seek > .add-playlist-button[data-active="true"] {
+  color: #c8b0ff;
+  background: var(--control-active-bg);
+  border-color: var(--control-active-border);
+
+  box-shadow: var(--control-active-shadow);
+}
+
+.player > .player-right {
+  width: max-content;
+  min-width: max-content;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  margin-left: auto;
 }
 
 .player > .player-right .like-button,
-.player > .player-right .like-button:hover,
-.player > .player-right .like-button:focus-visible,
-.player > .player-right .like-button.liked {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
-  display: grid !important;
-  place-items: center !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 50% !important;
-  color: var(--like-pink) !important;
-  background: transparent !important;
-  box-shadow: none !important;
+.player > .player-right .player-action {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+
+  background: rgba(255,255,255,.035);
 }
 
-.player > .player-right .like-button.liked {
-  color: var(--like-pink-bright) !important;
+.player > .player-right .like-button {
+  color: var(--like-pink) !important;
 }
 
 .player > .player-right .like-button svg {
-  stroke: currentColor !important;
+  width: 18px;
+  height: 18px;
 }
 
-.player-expanded .like-button,
-.player-expanded .like-button:hover,
-.player-expanded .like-button:focus-visible,
-.player-expanded .like-button.liked {
+.player > .player-right .like-button.liked {
   color: var(--like-pink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  background: var(--control-active-bg);
+  border-color: var(--control-active-border);
+  box-shadow: var(--control-active-shadow);
 }
 
-.player-expanded .like-button.liked {
-  color: var(--like-pink-bright) !important;
+.player > .player-right .like-button:hover, .player-expanded .big-controls .like-button:hover {
+  color: var(--like-pink) !important; background: linear-gradient(135deg, rgba(255,105,180,.20), rgba(244,114,182,.09)) !important; border-color: rgba(255,105,180,.48) !important; box-shadow: 0 0 16px rgba(255,105,180,.52), 0 0 30px rgba(255,105,180,.20) !important; transform: translateY(-4px) scale(1.055) !important; filter: brightness(1.08);
+}
+.player > .player-right .like-button:active, .player-expanded .big-controls .like-button:active {
+  color: var(--like-pink) !important; background: linear-gradient(135deg, rgba(255,105,180,.32), rgba(244,114,182,.15)) !important; border-color: rgba(255,105,180,.62) !important; transform: translateY(4px) scale(.90) !important; box-shadow: 0 0 0 2px rgba(255,105,180,.24), 0 0 28px rgba(255,105,180,.84), 0 0 50px rgba(255,105,180,.42), inset 0 0 16px rgba(255,105,180,.18) !important; filter: brightness(1.15);
+}
+.player > .player-right .like-button:hover svg, .player > .player-right .like-button:active svg, .player-expanded .big-controls .like-button:hover svg, .player-expanded .big-controls .like-button:active svg {
+  color: var(--like-pink) !important; stroke: var(--like-pink) !important; stroke-width: 2.8; filter: drop-shadow(0 0 5px rgba(255,105,180,1)) drop-shadow(0 0 15px rgba(255,105,180,1)) drop-shadow(0 0 28px rgba(255,105,180,.78));
+}
+
+.player > .player-right .volume-control {
+  width: 176px;
+  min-width: 176px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0;
+  padding: 3px 7px 3px 3px;
+
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.055),
+      rgba(255,255,255,.025)
+    );
+
+  overflow: visible;
+}
+
+.player > .player-right .volume-button {
+  order: 1;
+
+  width: 35px;
+  height: 35px;
+  min-width: 35px;
+  min-height: 35px;
+
+  flex: 0 0 35px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(255,255,255,.72);
+}
+
+.player > .player-right .volume-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.player > .player-right .volume-button:not(:disabled):hover:not(:active) {
+  transform: translateY(-5px) !important;
+}
+
+.player > .player-right .volume-slider-wrap {
+  order: 2;
+
+  min-width: 0;
+  flex: 1 1 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player > .player-right .volume-slider {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 65px;
+}
+
+.player > .player-right .volume-value {
+  flex: 0 0 24px;
+  width: 24px;
+  min-width: 24px;
+
+  color: rgba(255,255,255,.52);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   REPEAT BADGE
+   -------------------------------------------------------------------------- */
+
+.repeat-mode-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+
+  width: 12px;
+  height: 12px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  background: #7c3aed;
+  color: #fff;
+
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
+
+  pointer-events: none;
+  box-shadow: 0 0 10px rgba(124,58,237,.85);
+}
+
+/* --------------------------------------------------------------------------
+   LIKE HEART BURST
+   -------------------------------------------------------------------------- */
+
+.like-button {
+  color: var(--like-pink) !important;
 }
 
 .like-burst-layer {
   position: fixed;
   inset: 0;
-  z-index: 3000;
+  z-index: 5000;
+
+  width: 100vw;
+  height: 100vh;
+
   pointer-events: none;
-  overflow: hidden;
+  overflow: visible;
+
+  transform: translateZ(0);
+  will-change: contents;
 }
 
 .like-burst-heart {
   position: fixed;
+
   display: grid;
   place-items: center;
-  color: var(--like-pink-bright);
+
+  color: var(--like-pink) !important;
+
   transform-origin: center center;
-  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
   pointer-events: none;
+  transform-origin: center;
+  will-change: transform, opacity;
+
   filter:
-    drop-shadow(0 0 4px rgba(255, 105, 180, 1))
-    drop-shadow(0 0 10px rgba(255, 105, 180, 0.88))
-    drop-shadow(0 0 22px rgba(255, 105, 180, 0.42));
+    drop-shadow(0 0 3px rgba(255,105,180,1))
+    drop-shadow(0 0 9px rgba(255,105,180,.85))
+    drop-shadow(0 0 20px rgba(255,105,180,.4));
 }
 
 .like-burst-heart svg {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* --------------------------------------------------------------------------
+   EXTENDED PLAYER
+   Center order remains:
+   Add Playlist → Shuffle → Previous → Play → Next → Repeat → Like
+   Volume is independent at bottom-right.
+   -------------------------------------------------------------------------- */
+
+.player-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  padding: 30px;
+  overflow: hidden;
+}
+
+.player-expanded .expanded-seek {
+  width: min(700px,88vw);
+
+  display: grid;
+  grid-template-columns: 44px minmax(180px,1fr) 44px;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 10px;
+}
+
+.player-expanded .expanded-time {
+  width: 44px;
+  min-width: 44px;
+
+  color: rgba(255,255,255,.62);
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-expanded .expanded-time-current {
+  text-align: right;
+}
+
+.player-expanded .expanded-time-end {
+  text-align: left;
+}
+
+.player-expanded .big-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-wrap: nowrap;
+  gap: 22px;
+
+  margin-top: 18px;
+}
+
+.player-expanded .big-controls > .extended-add-playlist-button {
+  order: 1;
+}
+
+.player-expanded .big-controls > .shuffle-anchor {
+  order: 2;
+}
+
+.player-expanded .big-controls > button:nth-of-type(2) {
+  order: 3;
+}
+
+.player-expanded .big-controls > button:not(.play-big) svg {
+  width: 18px;
+  height: 18px;
+}
+
+.player-expanded .big-controls > .play-big {
+  order: 4;
+}
+
+.player-expanded .big-controls > button:nth-of-type(4) {
+  order: 5;
+}
+
+.player-expanded .big-controls > button:nth-of-type(5) {
+  order: 6;
+}
+
+.player-expanded .big-controls > .like-button {
+  order: 7;
+}
+
+.player-expanded .extended-add-playlist-button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: transparent;
+  color: rgba(255,255,255,.72);
+}
+
+.player-expanded .extended-add-playlist-button.control-active,
+.player-expanded .extended-add-playlist-button[data-active="true"] {
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(124,58,237,.10)) !important;
+  border-color: rgba(167,139,250,.44) !important;
+  box-shadow: 0 0 0 1px rgba(167,139,250,.10), 0 0 20px rgba(139,92,246,.36) !important;
+}
+
+/* Extended Like matches normal Like exactly. */
+.player-expanded .big-controls .like-button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: transparent;
+  color: var(--like-pink) !important;
+}
+
+.player-expanded .big-controls .like-button svg {
+  width: 18px;
+  height: 18px;
+  color: var(--like-pink) !important;
+  stroke: var(--like-pink) !important;
+}
+
+.player-expanded .big-controls .like-button.liked {
+  color: var(--like-pink) !important;
+  background: var(--control-active-bg);
+  border-color: var(--control-active-border);
+  box-shadow: var(--control-active-shadow);
+}
+
+.player-expanded .big-controls .like-button:hover {
+  color: var(--like-pink) !important;
+  background: linear-gradient(135deg, rgba(255,105,180,.20), rgba(244,114,182,.09)) !important;
+  border-color: rgba(255,105,180,.48) !important;
+  box-shadow: 0 0 16px rgba(255,105,180,.52), 0 0 30px rgba(255,105,180,.20) !important;
+  transform: translateY(-4px) scale(1.055) !important;
+}
+
+.player-expanded .big-controls .like-button:active {
+  color: var(--like-pink) !important;
+  background: linear-gradient(135deg, rgba(255,105,180,.32), rgba(244,114,182,.15)) !important;
+  border-color: rgba(255,105,180,.62) !important;
+  transform: translateY(4px) scale(.90) !important;
+  box-shadow: 0 0 0 2px rgba(255,105,180,.24), 0 0 28px rgba(255,105,180,.84), 0 0 50px rgba(255,105,180,.42), inset 0 0 16px rgba(255,105,180,.18) !important;
+}
+
+.player-expanded .extended-volume-control {
+  position: absolute;
+
+  right: 20px;
+  bottom: 24px;
+
+  width: 176px;
+  min-width: 176px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0;
+  padding: 3px 7px 3px 3px;
+
+  border: 0;
+  border-radius: 14px;
+
+  background:transparent;
+
+  overflow: visible;
+  z-index: 80;
+}
+
+.player-expanded .extended-volume-control > .volume-button {
+  order: 1;
+
+  width: 35px;
+  height: 35px;
+  min-width: 35px;
+  min-height: 35px;
+
+  flex: 0 0 35px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid transparent;
+  border: 2px solid rgba(196,181,253,.85) !important;
+  border-radius: 10px;
+
+  background: transparent;
+  color: rgba(255,255,255,.72);
+}
+
+.player-expanded .extended-volume-control > .volume-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.player-expanded .extended-volume-control > .volume-slider-wrap {
+  order: 2;
+
+  min-width: 0;
+  flex: 1 1 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-expanded .extended-volume-control .volume-slider {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 65px;
+}
+
+.player-expanded .extended-volume-control .volume-value {
+  flex: 0 0 24px;
+  width: 24px;
+  min-width: 24px;
+
+  color: rgba(255,255,255,.52);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.player-expanded .extended-volume-control.is-open > .volume-button {
+  background: var(--control-active-bg);
+  border: 2px solid rgba(196,181,253,.85) !important;
+  box-shadow:
+    0 0 0 2px rgba(196, 181, 253, 0.16),
+    0 0 18px rgba(139, 92, 246, 0.48),
+    0 0 32px rgba(124, 58, 237, 0.30),
+    inset 0 0 0 1px rgba(196, 181, 253, 0.12);
+  color: #c8b0ff;
+  transform: scale(0.94);
+}
+
+/* --------------------------------------------------------------------------
+   SHUFFLE BUTTON — ONE AUTHORITATIVE DEFINITION
+   Idle and selected states use the same control geometry as Repeat.
+   -------------------------------------------------------------------------- */
+
+.player .shuffle-anchor,
+.player-expanded .shuffle-anchor {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: max-content;
+  height: max-content;
+
+  overflow: visible;
+}
+
+.player .shuffle-anchor > .shuffle-button,
+.player-expanded .shuffle-anchor > .shuffle-button {
+  position: relative;
+
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #fff;
+
+  box-shadow: none;
+  transform: none;
+  filter: none;
+
+  overflow: visible;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 110ms ease,
+    color 160ms ease;
+}
+
+/* Shuffle must not create its own hover ring or internal patch. */
+.player .shuffle-anchor > .shuffle-button:hover,
+.player-expanded .shuffle-anchor > .shuffle-button:hover {
+  background: var(--control-hover-bg) !important;
+  border-color: var(--control-hover-border) !important;
+  box-shadow: var(--control-hover-shadow) !important;
+  transform: translateY(-1px);
+}
+
+.player .shuffle-anchor > .shuffle-button:active,
+.player-expanded .shuffle-anchor > .shuffle-button:active {
+  background: var(--control-press-bg) !important;
+  border-color: var(--control-press-border) !important;
+  box-shadow: var(--control-press-shadow) !important;
+  transform: scale(.94);
+}
+
+.player .shuffle-anchor > .shuffle-button:focus-visible,
+.player-expanded .shuffle-anchor > .shuffle-button:focus-visible {
+  background: var(--control-hover-bg) !important;
+  border-color: var(--control-press-border) !important;
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,.16),
+    0 0 16px rgba(139,92,246,.22) !important;
+}
+
+/* Selected Shuffle uses Repeat's persistent active surface. */
+.player .shuffle-anchor > .shuffle-button-selected,
+.player-expanded .shuffle-anchor > .shuffle-button-selected {
+  color: #c8b0ff !important;
+
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+
+  background: var(--control-active-bg) !important;
+  border: 1px solid var(--control-active-border) !important;
+  border-radius: 10px !important;
+
+  box-shadow: var(--control-active-shadow) !important;
+  transform: scale(0.96) !important;
+}
+
+.player .shuffle-anchor > .shuffle-button-selected:hover,
+.player-expanded .shuffle-anchor > .shuffle-button-selected:hover {
+  background: rgba(139,92,246,.27) !important;
+  border-color: rgba(196,181,253,.64) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(196,181,253,.10),
+    0 0 18px rgba(139,92,246,.24) !important;
+}
+
+.player .shuffle-anchor > .shuffle-button-selected:active,
+.player-expanded .shuffle-anchor > .shuffle-button-selected:active {
+  background: rgba(139,92,246,.31) !important;
+  border-color: rgba(215,202,255,.70) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(215,202,255,.12),
+    0 0 18px rgba(139,92,246,.30) !important;
+  transform: scale(.94);
+}
+
+/* Idle/selected glyphs never paint a secondary square/ring. */
+.player .shuffle-anchor > .shuffle-button::before,
+.player .shuffle-anchor > .shuffle-button::after,
+.player-expanded .shuffle-anchor > .shuffle-button::before,
+.player-expanded .shuffle-anchor > .shuffle-button::after,
+.player .shuffle-anchor > .shuffle-button > .shuffle-glyph::before,
+.player .shuffle-anchor > .shuffle-button > .shuffle-glyph::after,
+.player-expanded .shuffle-anchor > .shuffle-button > .shuffle-glyph::before,
+.player-expanded .shuffle-anchor > .shuffle-button > .shuffle-glyph::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* The custom selected SVG is already the clean image-1 geometry. */
+.player .shuffle-anchor .shuffle-glyph,
+.player-expanded .shuffle-anchor .shuffle-glyph {
+  position: relative;
+
+  width: 18px;
+  height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  overflow: visible;
+
+  z-index: 1;
+}
+
+.player .shuffle-anchor .shuffle-glyph > svg,
+.player-expanded .shuffle-anchor .shuffle-glyph > svg {
+  width: 18px;
+  height: 18px;
+
+  display: block;
+
+  background: transparent;
+  fill: none;
+
+  color: currentColor;
+  stroke: currentColor;
+
+  filter: none;
+}
+
+/* Selected mini source icon occupies the omitted upper-left space. */
+.player .shuffle-anchor .shuffle-source-slot,
+.player-expanded .shuffle-anchor .shuffle-source-slot {
+  position: absolute;
+
+  left: 4px;
+  top: 4px;
+
+  width: 15px;
+  height: 15px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  margin: 0;
+
+  color: #cdb8ff;
+
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none;
+
+  pointer-events: none;
+  z-index: 5;
+}
+
+.player .shuffle-anchor .shuffle-source-slot > svg,
+.player-expanded .shuffle-anchor .shuffle-source-slot > svg {
+  width: 12px;
+  height: 12px;
+
+  display: block;
+
+  color: currentColor;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+
+  background: transparent;
+  filter: none;
+}
+
+/* --------------------------------------------------------------------------
+   SHUFFLE SOURCE MENU — ONE PORTAL DEFINITION
+   -------------------------------------------------------------------------- */
+
+.shuffle-menu {
+  position: fixed !important;
+
+  left: var(--shuffle-left) !important;
+  bottom: var(--shuffle-bottom) !important;
+  top: auto !important;
+  right: auto !important;
+
+  width: var(--shuffle-width) !important;
+  max-width: calc(100vw - 20px) !important;
+
+  padding: 7px !important;
+  margin: 0 !important;
+
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+
+  background: rgba(8,9,20,.985);
+
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.62),
+    0 0 40px rgba(139,92,246,.12);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  z-index: 2147483647 !important;
+
+  overflow: visible !important;
+  pointer-events: auto;
+
+  transform-origin: bottom center;
+}
+
+.shuffle-menu::after {
+  content: '';
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -5px;
+
+  width: 10px;
+  height: 10px;
+
+  transform: translateX(-50%) rotate(45deg);
+
+  background: rgba(8,9,20,.985);
+
+  border-right: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+
+  pointer-events: none;
+}
+
+.shuffle-menu-header {
+  display: none;
+}
+
+.shuffle-option { width: 100%; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 8px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: #fff; text-align: left; transform-origin: center; transition: transform 180ms cubic-bezier(.22,1.25,.36,1), background-color 180ms ease, border-color 180ms ease, box-shadow 190ms ease, color 180ms ease; }
+.shuffle-option:hover:not(:disabled) { animation: musicGalaxyButtonBounce 360ms cubic-bezier(.22,1.25,.36,1) both; background: linear-gradient(135deg, rgba(139,92,246,.20), rgba(124,58,237,.08)); border-color: rgba(167,139,250,.38); box-shadow: 0 0 18px rgba(139,92,246,.42), 0 0 30px rgba(124,58,237,.14); }
+.shuffle-option:hover:not(:disabled) .shuffle-option-icon { color: #c8b0ff; box-shadow: 0 0 12px rgba(139,92,246,.42); }
+.shuffle-option:hover:not(:disabled) .shuffle-option-icon svg { color: #c8b0ff; stroke: #c8b0ff; filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 11px rgba(139,92,246,1)); }
+.shuffle-option:active:not(:disabled) { animation: none; transform: translateY(4px) scale(.94); background: rgba(139,92,246,.30); border-color: rgba(167,139,250,.52); box-shadow: 0 0 0 2px rgba(167,139,250,.18), 0 0 24px rgba(139,92,246,.72), 0 0 40px rgba(124,58,237,.28); }
+.shuffle-option:active:not(:disabled) .shuffle-option-icon { color: #c8b0ff; box-shadow: 0 0 18px rgba(139,92,246,.62); }
+.shuffle-option.active { color: #c8b0ff; background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(124,58,237,.10)); border-color: rgba(167,139,250,.44); box-shadow: 0 0 0 1px rgba(167,139,250,.10), 0 0 20px rgba(139,92,246,.36); }
+.shuffle-option.active .shuffle-option-icon { color: #c8b0ff; background: rgba(139,92,246,.18); box-shadow: 0 0 13px rgba(139,92,246,.42); }
+.shuffle-option.active .shuffle-option-icon svg, .shuffle-option.active > svg:last-child { color: #c8b0ff; stroke: #c8b0ff; filter: drop-shadow(0 0 4px rgba(196,181,253,1)) drop-shadow(0 0 12px rgba(139,92,246,.95)); }
+.shuffle-option:disabled { opacity: .38; cursor: not-allowed; }
+.shuffle-option-icon { width: 30px; height: 30px; min-width: 30px; display: grid; place-items: center; border-radius: 8px; background: rgba(139,92,246,.12); color: #c4b5fd; transition: transform 180ms cubic-bezier(.22,1.25,.36,1), background-color 180ms ease, color 180ms ease, box-shadow 190ms ease, filter 180ms ease; }
+.shuffle-option-copy { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; }
+.shuffle-option-copy b, .shuffle-option-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shuffle-option-copy b { color: rgba(255,255,255,.94); font-size: 10px; font-weight: 700; }
+.shuffle-option-copy small { color: rgba(255,255,255,.38); font-size: 8px; }
+.shuffle-option.active .shuffle-option-copy b { color: #fff; }
+
+.shuffle-option > svg:last-child {
+  flex: 0 0 auto;
+  color: #a78bfa;
+}
+
+/* --------------------------------------------------------------------------
+   ADD-TO-PLAYLIST / CREATE / CONFIRM MODALS
+   -------------------------------------------------------------------------- */
+
+.playlist-picker-list {
+  display: grid;
+  gap: 6px;
+
+  max-height: 320px;
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+}
+
+.playlist-picker-list button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 12px;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.04);
+  color: #fff;
+
+  text-align: left;
+}
+
+.playlist-picker-list button:hover {
+  background: rgba(139,92,246,.12);
+  border-color: rgba(167,139,250,.18);
+}
+
+.playlist-picker-list span {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.playlist-picker-list b,
+.playlist-picker-list small {
+  display: block;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-picker-list small {
+  margin-top: 3px;
+  color: #777287;
+  font-size: 11px;
+}
+
+.app-confirm-backdrop {
+  z-index: 3000;
+}
+
+.app-confirm-dialog {
+  width: min(430px, calc(100vw - 28px));
+  padding: 22px;
+}
+
+.app-confirm-message {
+  margin: -4px 0 4px;
+  color: #9297aa;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.app-confirm-danger {
+  background: linear-gradient(135deg,#f25b77,#d9375b) !important;
+  box-shadow: 0 8px 30px rgba(217,55,91,.22) !important;
+}
+
+/* --------------------------------------------------------------------------
+   MOBILE VOLUME POPOVER
+   -------------------------------------------------------------------------- */
+
+.volume-control {
+  position: relative;
+  overflow: visible;
+}
+
+.volume-mobile-popover {
+  position: absolute;
+
+  right: 0;
+  bottom: calc(100% + 10px);
+
+  z-index: 10000;
+
+  width: 58px;
+  min-height: 178px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px 8px;
+
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 16px;
+
+  background: rgba(8,9,20,.97);
+
+  box-shadow:
+    0 22px 55px rgba(0,0,0,.52),
+    0 0 0 1px rgba(124,92,255,.04);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.volume-mobile-value {
+  color: rgba(255,255,255,.76);
+  font-size: 9px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.volume-mobile-slider {
+  width: 132px;
+  height: 22px;
+
+  margin: 24px 0;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  writing-mode: vertical-rl;
+  direction: rtl;
+
+  transform: rotate(180deg);
+
+  background: transparent;
+  cursor: pointer;
+
+  touch-action: none;
+}
+
+.volume-mobile-slider::-webkit-slider-runnable-track {
+  width: 4px;
+  height: 112px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      to top,
+      #9d7cff 0%,
+      #c3adff var(--volume-fill,72%),
+      rgba(255,255,255,.12) var(--volume-fill,72%),
+      rgba(255,255,255,.12) 100%
+    );
+}
+
+.volume-mobile-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 14px;
+  height: 14px;
+
+  margin-top: -5px;
+
+  border: 2px solid #fff;
+  border-radius: 50%;
+
+  background: #a889ff;
+
+  box-shadow: 0 0 10px rgba(168,137,255,.78);
+}
+
+.volume-mobile-slider::-moz-range-track {
+  width: 4px;
+  height: 112px;
+
+  border-radius: 999px;
+
+  background: rgba(255,255,255,.12);
+}
+
+.volume-mobile-slider::-moz-range-progress {
+  width: 4px;
+  border-radius: 999px;
+  background: #9d7cff;
+}
+
+.volume-mobile-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid #fff;
+  border-radius: 50%;
+
+  background: #a889ff;
+}
+
+.volume-mobile-mute {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.78);
+
+  touch-action: manipulation;
+}
+
+/* Mobile button must remain available even though the desktop slider is hidden. */
+@media (max-width: 680px) {
+  .player {
+    height: 72px;
+    padding: 0 8px;
+    grid-template-columns: max-content minmax(0,1fr) max-content;
+    column-gap: 7px;
+
+    overflow: visible;
+  }
+
+  .player-left {
+    gap: 0;
+  }
+
+  .player-left .current {
+    display: none;
+  }
+
+  .player-left .player-controls {
+    gap: 3px;
+  }
+
+  .player-left .player-controls > button:nth-child(1),
+  .player-left .player-controls > button:nth-last-child(1) {
+    display: none;
+  }
+
+  .player-left .player-controls > button {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .player-left .player-controls > button:not(.play) svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .player-left .player-controls > button.play {
+    width: 46px;
+    height: 46px;
+  }
+
+  .player > .player-seek {
+    display: none;
+  }
+
+  .player > .player-right {
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .player > .player-right .add-playlist-button {
+    display: none;
+  }
+
+  .player > .player-right .volume-control {
+    width: 36px;
+    min-width: 36px;
+    height: 40px;
+
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+
+    justify-content: center;
+  }
+
+  .player > .player-right .volume-slider-wrap {
+    display: none;
+  }
+
+  .player > .player-right .volume-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+
+    flex: 0 0 36px;
+  }
+
+  .player > .player-right .like-button {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .player .shuffle-anchor > .shuffle-button {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .player .shuffle-anchor .shuffle-glyph {
+    width: 22px;
+    height: 22px;
+  }
+
+  .player .shuffle-anchor .shuffle-glyph > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .player .shuffle-anchor .shuffle-source-slot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .player .shuffle-anchor .shuffle-source-slot > svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .volume-mobile-popover {
+    right: -4px;
+    bottom: calc(100% + 9px);
+  }
+
+  .player-expanded .big-controls {
+    gap: 10px;
+  }
+
+  .player-expanded .extended-volume-control {
+    right: 14px;
+    bottom: 18px;
+
+    width: 36px;
+    min-width: 36px;
+    height: 40px;
+
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+  }
+
+  .player-expanded .extended-volume-control .volume-slider-wrap {
+    display: none;
+  }
+
+  .player-expanded .extended-volume-control > .volume-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    flex-basis: 36px;
+  }
+
+  .player-expanded .extended-volume-control .volume-mobile-popover {
+    right: 0;
+    bottom: calc(100% + 9px);
+  }
+
+  .player-expanded .big-controls > button:not(.play-big) {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .player-expanded .big-controls > button:not(.play-big) svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .player-left .player-controls {
+    gap: 2px;
+  }
+
+  .player-left .player-controls > button.play,
+  .player-expanded .big-controls > .play-big {
+    width: 42px;
+    height: 42px;
+  }
+
+  .player .shuffle-anchor > .shuffle-button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .player > .player-right .like-button,
+  .player > .player-right .volume-button {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    flex-basis: 34px;
+  }
+
+  .player-expanded .extended-volume-control {
+    right: 10px;
+    bottom: 14px;
+
+    width: 34px;
+    min-width: 34px;
+  }
+
+  .player-expanded .extended-volume-control > .volume-button {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    flex-basis: 34px;
+  }
+
+  .player-expanded .big-controls > button:not(.play-big) {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .player-expanded .big-controls > button:not(.play-big) svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .volume-mobile-popover {
+    min-height: 154px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .like-burst-heart {
     display: none;
   }
-}
 
+  .player .player-controls > button,
+  .player > .player-right .player-action,
+  .player > .player-right .volume-button,
+  .player-expanded .big-controls > button,
+  .shuffle-option {
+    transition: none !important;
+  }
 
-/* ============================================================
-   FINAL LIKE THEME + SLOW PROJECTILE HEARTS
-   ============================================================ */
-:root {
-  --like-pink: #ff69b4;
-  --like-pink-bright: #ff7ac0;
-}
-
-.planet-tooltip .like-button,
-.planet-tooltip .like-button:hover,
-.planet-tooltip .like-button:focus-visible,
-.planet-tooltip .like-button.liked,
-.player-expanded .like-button,
-.player-expanded .like-button:hover,
-.player-expanded .like-button:focus-visible,
-.player-expanded .like-button.liked,
-.player > .player-right .like-button,
-.player > .player-right .like-button:hover,
-.player > .player-right .like-button:focus-visible,
-.player > .player-right .like-button.liked {
-  color: var(--like-pink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-.planet-tooltip .like-button.liked,
-.player-expanded .like-button.liked,
-.player > .player-right .like-button.liked {
-  color: var(--like-pink-bright) !important;
-}
-
-.like-burst-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 5000;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.like-burst-heart {
-  position: fixed;
-  display: grid;
-  place-items: center;
-  color: var(--like-pink-bright) !important;
-  pointer-events: none;
-  transform-origin: center;
-  will-change: transform, opacity;
-  filter:
-    drop-shadow(0 0 3px rgba(255, 105, 180, 1))
-    drop-shadow(0 0 8px rgba(255, 105, 180, 0.9))
-    drop-shadow(0 0 18px rgba(255, 105, 180, 0.55));
-}
-
-.like-burst-heart svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-
-/* ============================================================
-   PARABOLIC PINK HEARTS — FINAL OVERRIDE
-   ============================================================ */
-
-:root {
-  --like-pink: #ff69b4;
-  --like-pink-bright: #ff69b4;
-}
-
-.player > .player-right .like-button,
-.player > .player-right .like-button:hover,
-.player > .player-right .like-button:focus-visible,
-.player > .player-right .like-button.liked,
-.player-expanded .like-button,
-.player-expanded .like-button:hover,
-.player-expanded .like-button:focus-visible,
-.player-expanded .like-button.liked,
-.planet-tooltip .like-button,
-.planet-tooltip .like-button:hover,
-.planet-tooltip .like-button:focus-visible,
-.planet-tooltip .like-button.liked {
-  color: var(--like-pink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-.like-burst-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 5000;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.like-burst-heart {
-  position: fixed;
-  display: grid;
-  place-items: center;
-  color: var(--like-pink) !important;
-  pointer-events: none;
-  transform-origin: center;
-  will-change: transform, opacity;
-  filter:
-    drop-shadow(0 0 3px rgba(255, 105, 180, 1))
-    drop-shadow(0 0 9px rgba(255, 105, 180, .85))
-    drop-shadow(0 0 20px rgba(255, 105, 180, .4));
-}
-
-.like-burst-heart svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-
-/* FINAL PARABOLIC PINK HEART OVERRIDES */
-:root {
-  --like-pink: #ff69b4;
-  --like-pink-bright: #ff69b4;
-}
-
-.player > .player-right .like-button,
-.player > .player-right .like-button:hover,
-.player > .player-right .like-button:focus-visible,
-.player > .player-right .like-button.liked,
-.player-expanded .like-button,
-.player-expanded .like-button:hover,
-.player-expanded .like-button:focus-visible,
-.player-expanded .like-button.liked,
-.planet-tooltip .like-button,
-.planet-tooltip .like-button:hover,
-.planet-tooltip .like-button:focus-visible,
-.planet-tooltip .like-button.liked {
-  color: var(--like-pink) !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-.like-burst-heart {
-  color: var(--like-pink) !important;
-}
-
-/* ============================================================
-   SHUFFLE SOURCE MENU
-   ============================================================ */
-
-.shuffle-anchor {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-}
-
-.shuffle-menu {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 12px);
-  transform: translateX(-50%);
-  z-index: 9000;
-
-  width: min(330px, calc(100vw - 24px));
-  padding: 8px;
-
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 16px;
-  background: rgba(8,9,20,.98);
-  box-shadow:
-    0 24px 80px rgba(0,0,0,.58),
-    0 0 40px rgba(139,92,246,.10);
-
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-.big-controls .shuffle-menu {
-  bottom: calc(100% + 14px);
-}
-
-.shuffle-menu-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 10px 10px;
-  margin-bottom: 2px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-
-.shuffle-menu-header > div {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.shuffle-menu-header span {
-  color: rgba(255,255,255,.38);
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 1.8px;
-}
-
-.shuffle-menu-header b {
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.shuffle-menu-header em {
-  flex: 0 0 auto;
-  padding: 4px 7px;
-  border-radius: 999px;
-  color: #ff69b4;
-  background: rgba(255,105,180,.09);
-  border: 1px solid rgba(255,105,180,.18);
-  font-size: 7px;
-  font-style: normal;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.shuffle-option {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 10px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  text-align: left;
-  color: #fff;
-  background: transparent;
-  transition:
-    background .16s ease,
-    border-color .16s ease,
-    transform .16s ease;
-}
-
-.shuffle-option:hover:not(:disabled) {
-  background: rgba(255,255,255,.055);
-  border-color: rgba(255,255,255,.05);
-  transform: translateY(-1px);
-}
-
-.shuffle-option.active {
-  background: rgba(139,92,246,.13);
-  border-color: rgba(167,139,250,.18);
-}
-
-.shuffle-option:disabled {
-  opacity: .38;
-  cursor: not-allowed;
-}
-
-.shuffle-option > svg {
-  flex: 0 0 auto;
-  color: #a78bfa;
-}
-
-.shuffle-option-icon {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  color: #c4b5fd;
-  background: rgba(139,92,246,.12);
-}
-
-.shuffle-option-copy {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.shuffle-option-copy b {
-  overflow: hidden;
-  color: rgba(255,255,255,.94);
-  font-size: 11px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shuffle-option-copy small {
-  overflow: hidden;
-  color: rgba(255,255,255,.38);
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shuffle-option.active .shuffle-option-copy b {
-  color: #fff;
-}
-
-.shuffle-option.active > svg:last-child {
-  color: #a78bfa;
-  flex: 0 0 auto;
-}
-
-@media (max-width: 680px) {
-  .shuffle-menu {
-    left: 0;
+  .player .player-controls > button:hover,
+  .player > .player-right .player-action:hover,
+  .player > .player-right .volume-button:hover,
+  .player-expanded .big-controls > button:hover,
+  .player .shuffle-anchor > .shuffle-button:hover,
+  .player .shuffle-anchor > .shuffle-button:active,
+  .player-expanded .shuffle-anchor > .shuffle-button:hover,
+  .player-expanded .shuffle-anchor > .shuffle-button:active {
     transform: none;
-    width: min(320px, calc(100vw - 20px));
-  }
-
-  .big-controls .shuffle-menu {
-    left: 50%;
-    transform: translateX(-50%);
   }
 }
 
-/* ========================================================================
-   SHUFFLE SOURCE MENU — FINAL UPWARD PLACEMENT
-   ======================================================================== */
-
-.shuffle-anchor {
-  position: relative !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: 0 0 auto !important;
-  width: max-content !important;
-  height: max-content !important;
-  overflow: visible !important;
-}
-
-.shuffle-anchor > .shuffle-menu {
-  position: absolute !important;
-  left: 0 !important;
-  right: auto !important;
-  top: auto !important;
-  bottom: calc(100% + 12px) !important;
-  transform: none !important;
-  z-index: 10000 !important;
-
-  width: 330px !important;
-  max-width: min(330px, calc(100vw - 24px)) !important;
-  max-height: min(62vh, 420px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-
-  padding: 9px !important;
-  margin: 0 !important;
-
-  border: 1px solid rgba(255,255,255,.10) !important;
-  border-radius: 16px !important;
-  background: rgba(8,9,20,.985) !important;
-  box-shadow:
-    0 22px 70px rgba(0,0,0,.62),
-    0 0 40px rgba(139,92,246,.12) !important;
-
-  pointer-events: auto !important;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.18) transparent;
-}
-
-.shuffle-anchor > .shuffle-menu::-webkit-scrollbar {
-  width: 6px;
-}
-
-.shuffle-anchor > .shuffle-menu::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.shuffle-anchor > .shuffle-menu::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.16);
-  border-radius: 999px;
-}
-
-.shuffle-anchor > .shuffle-menu::after {
-  content: '';
-  position: absolute;
-  left: 16px;
-  right: auto;
-  bottom: -6px;
-  width: 12px;
-  height: 12px;
-  transform: rotate(45deg);
-  background: rgba(8,9,20,.985);
-  border-right: 1px solid rgba(255,255,255,.08);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-/* Both normal and expanded player use the same anchor-relative placement. */
-.big-controls .shuffle-anchor,
-.player-controls .shuffle-anchor {
-  position: relative !important;
-  overflow: visible !important;
-}
-
-.big-controls .shuffle-anchor > .shuffle-menu,
-.player-controls .shuffle-anchor > .shuffle-menu {
-  left: 0 !important;
-  bottom: calc(100% + 14px) !important;
-  top: auto !important;
-  transform: none !important;
-}
-
-@media (max-width: 680px) {
-  .shuffle-anchor > .shuffle-menu,
-  .big-controls .shuffle-anchor > .shuffle-menu,
-  .player-controls .shuffle-anchor > .shuffle-menu {
-    width: min(310px, calc(100vw - 20px)) !important;
-    max-width: calc(100vw - 20px) !important;
-    left: 0 !important;
-  }
-
-  /* If the anchor is too close to the right edge, keep the menu on-screen. */
-  .shuffle-anchor:last-child > .shuffle-menu {
-    left: auto !important;
-    right: 0 !important;
-  }
-
-  .shuffle-anchor:last-child > .shuffle-menu::after {
-    left: auto;
-    right: 16px;
-  }
-}
-
-
-
-/* FINAL SHUFFLE MENU POSITIONING — fixed to the actual clicked button. */
-.shuffle-menu {
-  position: fixed !important;
-  left: var(--shuffle-left) !important;
-  bottom: var(--shuffle-bottom) !important;
-  top: auto !important;
-  right: auto !important;
-  width: min(330px, calc(100vw - 24px)) !important;
-  max-width: calc(100vw - 24px) !important;
-  max-height: min(62vh, 420px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  z-index: 100000 !important;
-  margin: 0 !important;
-  pointer-events: auto !important;
-  transform-origin: bottom center !important;
-}
-
-/* The menu belongs to whichever Shuffle button was clicked, in both modes. */
-.shuffle-anchor {
-  position: relative !important;
-  overflow: visible !important;
-}
-
-@media (max-width: 680px) {
-  .shuffle-menu {
-    width: min(310px, calc(100vw - 24px)) !important;
-    max-width: calc(100vw - 24px) !important;
-  }
-}
-
-
-/* ==========================================================================
-   SHUFFLE SOURCE MENU — PORTAL / ABOVE BOTH PLAYERS
-   The menu is rendered directly under document.body by React Portal, so it
-   escapes the transformed/staking contexts of the normal and extended player.
-   ========================================================================== */
-.shuffle-menu {
-  position: fixed !important;
-  z-index: 200000 !important;
-  max-width: calc(100vw - 24px) !important;
-  max-height: min(60vh, 420px) !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  margin: 0 !important;
-  pointer-events: auto !important;
-  transform-origin: bottom center !important;
-  isolation: isolate;
-}
-
-.shuffle-menu::after {
-  content: '';
-  position: absolute;
-  bottom: -7px;
-  left: 50%;
-  width: 13px;
-  height: 13px;
-  background: inherit;
-  border-right: 1px solid rgba(255,255,255,.08);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  transform: translateX(-50%) rotate(45deg);
-  pointer-events: none;
-}
-
-/* Never let an old child-menu rule move the portal menu. */
-.shuffle-anchor > .shuffle-menu {
-  position: fixed !important;
-  inset: auto !important;
-  left: auto !important;
-  right: auto !important;
-  top: auto !important;
-  bottom: auto !important;
-}
-
-@media (max-width: 680px) {
-  .shuffle-menu {
-    max-width: calc(100vw - 20px) !important;
-  }
-}
-
-
-/* ========================================================================
-   SHUFFLE MENU — FINAL AUTHORITATIVE RULES
-   The menu is rendered through a portal directly under document.body.
-   These rules intentionally override older anchor-relative menu rules.
-   ======================================================================== */
-body > .shuffle-menu {
-  position: fixed !important;
-  left: var(--shuffle-left) !important;
-  bottom: var(--shuffle-bottom) !important;
-  top: auto !important;
-  right: auto !important;
-  width: var(--shuffle-width) !important;
-  max-width: calc(100vw - 24px) !important;
-  max-height: none !important;
-  overflow: visible !important;
-  padding: 6px !important;
-  margin: 0 !important;
-  z-index: 2147483647 !important;
-  box-sizing: border-box !important;
-  transform-origin: bottom center !important;
-}
-
-body > .shuffle-menu .shuffle-menu-header {
-  display: none !important;
-}
-
-body > .shuffle-menu .shuffle-option {
-  min-height: 48px !important;
-  padding: 7px 8px !important;
-  gap: 9px !important;
-  border-radius: 10px !important;
-}
-
-body > .shuffle-menu .shuffle-option-icon {
-  width: 30px !important;
-  height: 30px !important;
-  flex: 0 0 30px !important;
-  border-radius: 8px !important;
-}
-
-body > .shuffle-menu .shuffle-option-copy b {
-  font-size: 10px !important;
-}
-
-body > .shuffle-menu .shuffle-option-copy small {
-  font-size: 8px !important;
-}
-
-body > .shuffle-menu::after {
-  content: '' !important;
-  position: absolute !important;
-  left: 50% !important;
-  right: auto !important;
-  bottom: -5px !important;
-  width: 10px !important;
-  height: 10px !important;
-  transform: translateX(-50%) rotate(45deg) !important;
-  background: rgba(8,9,20,.985) !important;
-  border-right: 1px solid rgba(255,255,255,.08) !important;
-  border-bottom: 1px solid rgba(255,255,255,.08) !important;
-  pointer-events: none !important;
-}
-
-/* The Shuffle button itself must remain visible in both players. */
-.shuffle-anchor > button,
-.player-controls .shuffle-anchor > button,
-.big-controls .shuffle-anchor > button {
-  display: grid !important;
-  place-items: center !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  flex: 0 0 auto !important;
-}
-
-/* Never reintroduce scrollbars on the three-option menu. */
-body > .shuffle-menu,
-body > .shuffle-menu * {
-  scrollbar-width: none !important;
-}
-
-body > .shuffle-menu::-webkit-scrollbar,
-body > .shuffle-menu *::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-@media (max-width: 680px) {
-  body > .shuffle-menu {
-    width: min(300px, calc(100vw - 20px)) !important;
-    max-width: calc(100vw - 20px) !important;
-  }
-}
-
-/* ==========================================================================
-   SHUFFLE MENU — COMPACT FINAL WIDTH
-   Keeps the portal positioning but removes the wasted right-side space.
-   Applies to both normal and extended player modes.
-   ========================================================================== */
-body > .shuffle-menu {
-  width: 286px !important;
-  min-width: 286px !important;
-  max-width: 286px !important;
-  box-sizing: border-box !important;
-  padding: 6px !important;
-}
-
-body > .shuffle-menu .shuffle-option {
-  width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 8px 8px !important;
-  gap: 9px !important;
-}
-
-body > .shuffle-menu .shuffle-option-copy {
-  min-width: 0 !important;
-  overflow: hidden !important;
-}
-
-body > .shuffle-menu .shuffle-option-copy b,
-body > .shuffle-menu .shuffle-option-copy small {
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
-@media (max-width: 680px) {
-  body > .shuffle-menu {
-    width: min(286px, calc(100vw - 20px)) !important;
-    min-width: 0 !important;
-    max-width: calc(100vw - 20px) !important;
-  }
-}
-
-/* ==========================================================================
-   FINAL DEVICE FIXES — MOBILE VOLUME + SHUFFLE BALANCED WIDTH
-   Keep existing warnings/compatibility declarations untouched.
-   ========================================================================== */
-
-/* --------------------------------------------------------------------------
-   MOBILE VOLUME BUTTON
-   -------------------------------------------------------------------------- */
-
-/* Always keep the volume control usable on touch devices. */
-@media (max-width: 680px) {
-  .player > .player-right {
-    width: max-content !important;
-    min-width: max-content !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    flex: 0 0 auto !important;
-    gap: 3px !important;
-  }
-
-  .player > .player-right .volume-control {
-    width: 36px !important;
-    min-width: 36px !important;
-    height: 40px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex: 0 0 36px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-  }
-
-  .player > .player-right .volume-button {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    display: grid !important;
-    place-items: center !important;
-    flex: 0 0 36px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 9px !important;
-    cursor: pointer !important;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  /* Hide only the slider/value to preserve space; the volume button remains. */
-  .player > .player-right .volume-slider-wrap,
-  .player > .player-right .volume-value {
+/* Desktop-only volume popover is never rendered visually. */
+@media (min-width: 681px) {
+  .volume-mobile-popover {
     display: none !important;
   }
-
-  .player > .player-right .volume-button svg {
-    width: 18px !important;
-    height: 18px !important;
-    pointer-events: none !important;
-  }
 }
 
-@media (max-width: 420px) {
-  .player > .player-right {
-    gap: 2px !important;
-  }
-
-  .player > .player-right .volume-control,
-  .player > .player-right .volume-button {
-    width: 34px !important;
-    min-width: 34px !important;
-    flex-basis: 34px !important;
-  }
-
-  .player > .player-right .volume-button {
-    height: 34px !important;
-    min-height: 34px !important;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   SHUFFLE MENU
-   Required geometry:
-   border → equal space → content → equal space → border
-   The longest option determines the popup width.
-   Works for normal + extended player because the menu is a body-level portal.
-   -------------------------------------------------------------------------- */
-
-body > .shuffle-menu {
-  width: max-content !important;
-  min-width: 0 !important;
-  max-width: calc(100vw - 20px) !important;
-
-  padding: 7px !important;
-  box-sizing: border-box !important;
-
-  overflow: visible !important;
-}
-
-/* Each option is exactly as wide as its own contents. */
-body > .shuffle-menu .shuffle-option {
-  width: max-content !important;
-  min-width: 0 !important;
-  max-width: calc(100vw - 34px) !important;
-
-  display: flex !important;
-  align-items: center !important;
-
-  padding: 8px !important;
-  gap: 9px !important;
-
-  box-sizing: border-box !important;
-}
-
-/* Do not let flex-grow create empty space after the longest label. */
-body > .shuffle-menu .shuffle-option-copy {
-  width: max-content !important;
-  min-width: 0 !important;
-  flex: 0 0 auto !important;
-}
-
-/* Keep text on one line so the longest option defines the menu width. */
-body > .shuffle-menu .shuffle-option-copy b,
-body > .shuffle-menu .shuffle-option-copy small {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Keep icons fixed and prevent them from changing the measured width. */
-body > .shuffle-menu .shuffle-option-icon {
-  flex: 0 0 30px !important;
-  width: 30px !important;
-  height: 30px !important;
-}
-
-/* The final option should not create extra width of its own. */
-body > .shuffle-menu .shuffle-option > svg:last-child {
-  flex: 0 0 auto !important;
-  margin-left: 0 !important;
-}
-
-/* Maintain the same geometry on phones/foldables. */
-@media (max-width: 680px) {
-  body > .shuffle-menu {
-    width: max-content !important;
-    min-width: 0 !important;
-    max-width: calc(100vw - 16px) !important;
-    padding: 6px !important;
-  }
-
-  body > .shuffle-menu .shuffle-option {
-    width: max-content !important;
-    max-width: calc(100vw - 28px) !important;
-    padding: 8px !important;
-  }
-}
-
-
-/* ==========================================================================
-   MOBILE VOLUME POPUP + GALAXY INPUT FIX
-   ========================================================================== */
-
-/* The R3F canvas must remain a real interaction surface. */
+/* SVG/canvas interaction surfaces. */
 .canvas-wrap {
   position: relative;
 }
 
 .canvas-wrap canvas {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  pointer-events: auto !important;
-  touch-action: none !important;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: auto;
+  touch-action: none;
 }
 
-/* Decorative overlays must never steal Galaxy pointer input. */
 .galaxy-label {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
-/* Mobile volume popup is anchored to the button and opens upward. */
-.volume-control {
-  position: relative !important;
-  overflow: visible !important;
+
+/* =====================================================================
+   MUSIC GALAXY — STRICT GLOBAL BUTTON INTERACTION CONTRACT
+   NON-LIKE = PURPLE | LIKE = PINK
+   Hover  : bounce upward + icon glow
+   Press  : bounce inward / shrink + intensified icon + shadow glow
+   Select : persistent purple state; LIKE uses pink
+   Labels used as controls (Import) follow the same contract.
+   ===================================================================== */
+
+@keyframes mg-strict-button-hover {
+  0%   { transform: translateY(0) scale(1); }
+  32%  { transform: translateY(-7px) scale(1.055); }
+  58%  { transform: translateY(-3px) scale(1.028); }
+  100% { transform: translateY(-5px) scale(1.045); }
 }
 
-.volume-mobile-popover {
-  position: absolute !important;
-  right: 0 !important;
-  bottom: calc(100% + 10px) !important;
-  z-index: 10000 !important;
-
-  width: 58px !important;
-  min-height: 178px !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-
-  padding: 10px 8px !important;
-
-  border: 1px solid rgba(255,255,255,.11) !important;
-  border-radius: 16px !important;
-
-  background: rgba(8,9,20,.97) !important;
+/* Every actual button uses PURPLE for hover/press unless it is Like. */
+button:not(:disabled):hover,
+button:not(:disabled):focus-visible {
+  animation: mg-strict-button-hover 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  filter: brightness(1.08) !important;
+  border-color: rgba(167,139,250,.42) !important;
   box-shadow:
-    0 22px 55px rgba(0,0,0,.52),
-    0 0 0 1px rgba(124,92,255,.04) !important;
-
-  backdrop-filter: blur(22px) !important;
-  -webkit-backdrop-filter: blur(22px) !important;
+    0 0 0 1px rgba(167,139,250,.10),
+    0 0 20px rgba(139,92,246,.48),
+    0 0 34px rgba(124,58,237,.20) !important;
 }
 
-.volume-mobile-value {
-  color: rgba(255,255,255,.76) !important;
-  font-size: 9px !important;
-  font-weight: 800 !important;
-  font-variant-numeric: tabular-nums !important;
+button:not(:disabled):hover svg,
+button:not(:disabled):focus-visible svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,1))
+    drop-shadow(0 0 22px rgba(124,58,237,.62)) !important;
 }
 
-.volume-mobile-slider {
-  width: 132px !important;
-  height: 22px !important;
-
-  margin: 24px 0 !important;
-
-  appearance: none !important;
-  -webkit-appearance: none !important;
-
-  writing-mode: vertical-rl !important;
-  direction: rtl !important;
-
-  transform: rotate(180deg) !important;
-
-  background: transparent !important;
-  cursor: pointer !important;
-  touch-action: none !important;
-}
-
-.volume-mobile-slider::-webkit-slider-runnable-track {
-  width: 4px !important;
-  height: 112px !important;
-  border-radius: 999px !important;
-  background:
-    linear-gradient(
-      to top,
-      #9d7cff 0%,
-      #c3adff var(--volume-fill, 72%),
-      rgba(255,255,255,.12) var(--volume-fill, 72%),
-      rgba(255,255,255,.12) 100%
-    ) !important;
-}
-
-.volume-mobile-slider::-webkit-slider-thumb {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-
-  width: 14px !important;
-  height: 14px !important;
-
-  margin-top: -5px !important;
-
-  border: 2px solid #fff !important;
-  border-radius: 50% !important;
-  background: #a889ff !important;
-
+button:not(:disabled):active {
+  animation: none !important;
+  transform: translateY(4px) scale(.88) !important;
+  filter: brightness(1.15) !important;
+  border-color: rgba(167,139,250,.58) !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.30), rgba(124,58,237,.16)) !important;
   box-shadow:
-    0 0 10px rgba(168,137,255,.78) !important;
+    0 0 0 2px rgba(167,139,250,.25),
+    0 0 27px rgba(139,92,246,.84),
+    0 0 50px rgba(124,58,237,.46),
+    inset 0 0 16px rgba(139,92,246,.20) !important;
 }
 
-.volume-mobile-slider::-moz-range-track {
-  width: 4px !important;
-  height: 112px !important;
-  border-radius: 999px !important;
-  background: rgba(255,255,255,.12) !important;
+button:not(:disabled):active svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 6px rgba(196,181,253,1))
+    drop-shadow(0 0 16px rgba(139,92,246,1))
+    drop-shadow(0 0 30px rgba(124,58,237,.90)) !important;
 }
 
-.volume-mobile-slider::-moz-range-progress {
-  width: 4px !important;
-  border-radius: 999px !important;
-  background: #9d7cff !important;
+/* Persistent selected/toggled state = PURPLE. */
+button.active,
+button.selected,
+button.control-active,
+button[data-active="true"],
+button[aria-pressed="true"] {
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.27), rgba(124,58,237,.13)) !important;
+  border-color: rgba(167,139,250,.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.12),
+    0 0 21px rgba(139,92,246,.40),
+    0 0 34px rgba(124,58,237,.16) !important;
 }
 
-.volume-mobile-slider::-moz-range-thumb {
-  width: 14px !important;
-  height: 14px !important;
-
-  border: 2px solid #fff !important;
-  border-radius: 50% !important;
-  background: #a889ff !important;
+button.active svg,
+button.selected svg,
+button.control-active svg,
+button[data-active="true"] svg,
+button[aria-pressed="true"] svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,1))
+    drop-shadow(0 0 23px rgba(124,58,237,.68)) !important;
 }
 
-.volume-mobile-mute {
-  width: 36px !important;
-  height: 36px !important;
-
-  display: grid !important;
-  place-items: center !important;
-
-  border: 1px solid rgba(255,255,255,.08) !important;
-  border-radius: 10px !important;
-
-  background: rgba(255,255,255,.05) !important;
-  color: rgba(255,255,255,.78) !important;
-
-  padding: 0 !important;
-  touch-action: manipulation !important;
+/* SELECTED + HOVER remains purple for every non-like control. */
+button.active:not(:disabled):hover,
+button.selected:not(:disabled):hover,
+button.control-active:not(:disabled):hover,
+button[data-active="true"]:not(:disabled):hover,
+button[aria-pressed="true"]:not(:disabled):hover {
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.34), rgba(124,58,237,.18)) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.18),
+    0 0 26px rgba(139,92,246,.58),
+    0 0 42px rgba(124,58,237,.24) !important;
 }
 
-.volume-mobile-mute:hover {
-  background: rgba(255,255,255,.09) !important;
-  color: #fff !important;
+/* SELECTED + PRESS remains purple and sinks harder. */
+button.active:not(:disabled):active,
+button.selected:not(:disabled):active,
+button.control-active:not(:disabled):active,
+button[data-active="true"]:not(:disabled):active,
+button[aria-pressed="true"]:not(:disabled):active {
+  color: #c8b0ff !important;
+  transform: translateY(4px) scale(.88) !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.38), rgba(124,58,237,.22)) !important;
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,.30),
+    0 0 30px rgba(139,92,246,.90),
+    0 0 54px rgba(124,58,237,.52),
+    inset 0 0 18px rgba(139,92,246,.22) !important;
 }
 
-/* Desktop/laptops: never show the mobile popup. */
-@media (min-width: 681px), (pointer: fine) {
-  .volume-mobile-popover {
-    display: none !important;
+/* ---------------------------------------------------------------------
+   LIKE IS THE ONLY PINK CONTROL
+   --------------------------------------------------------------------- */
+button.like-button,
+button.like-button.liked,
+button.like-button[aria-pressed="true"],
+button.like-button[data-active="true"] {
+  --like-pink: #ff70bd;
+}
+
+button.like-button:not(:disabled):hover {
+  animation: mg-strict-button-hover 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  color: #ff70bd !important;
+  background: linear-gradient(135deg, rgba(244,114,182,.20), rgba(255,105,180,.10)) !important;
+  border-color: rgba(244,114,182,.52) !important;
+  box-shadow:
+    0 0 0 1px rgba(244,114,182,.16),
+    0 0 23px rgba(244,114,182,.58),
+    0 0 40px rgba(255,105,180,.28) !important;
+}
+
+button.like-button:not(:disabled):hover svg {
+  color: #ff70bd !important;
+  stroke: #ff70bd !important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,105,180,1))
+    drop-shadow(0 0 14px rgba(244,114,182,1))
+    drop-shadow(0 0 25px rgba(255,105,180,.72)) !important;
+}
+
+button.like-button:not(:disabled):active {
+  animation: none !important;
+  transform: translateY(4px) scale(.88) !important;
+  color: #ff70bd !important;
+  background: linear-gradient(135deg, rgba(244,114,182,.34), rgba(255,105,180,.18)) !important;
+  border-color: rgba(255,105,180,.64) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,105,180,.27),
+    0 0 30px rgba(244,114,182,.86),
+    0 0 54px rgba(255,105,180,.50),
+    inset 0 0 18px rgba(255,105,180,.20) !important;
+}
+
+button.like-button:not(:disabled):active svg {
+  color: #ff70bd !important;
+  stroke: #ff70bd !important;
+  filter:
+    drop-shadow(0 0 6px rgba(255,105,180,1))
+    drop-shadow(0 0 17px rgba(244,114,182,1))
+    drop-shadow(0 0 32px rgba(255,105,180,.92)) !important;
+}
+
+button.like-button.liked,
+button.like-button[aria-pressed="true"],
+button.like-button[data-active="true"] {
+  color: #ff70bd !important;
+  background: linear-gradient(135deg, rgba(244,114,182,.22), rgba(255,105,180,.11)) !important;
+  border-color: rgba(244,114,182,.52) !important;
+  box-shadow:
+    0 0 0 1px rgba(244,114,182,.15),
+    0 0 22px rgba(244,114,182,.42),
+    0 0 34px rgba(255,105,180,.18) !important;
+}
+
+button.like-button.liked svg,
+button.like-button[aria-pressed="true"] svg,
+button.like-button[data-active="true"] svg {
+  color: #ff70bd !important;
+  stroke: #ff70bd !important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,105,180,1))
+    drop-shadow(0 0 14px rgba(244,114,182,1))
+    drop-shadow(0 0 26px rgba(255,105,180,.76)) !important;
+}
+
+/* ---------------------------------------------------------------------
+   IMPORT / LABEL CONTROLS
+   They are labels rather than <button>, so give them the exact contract.
+   Import is NON-LIKE => PURPLE.
+   --------------------------------------------------------------------- */
+.publish,
+.primary,
+.ghost,
+.icon-btn {
+  transform-origin: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.publish:hover,
+.primary:hover,
+.ghost:hover,
+.icon-btn:hover {
+  animation: mg-strict-button-hover 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  filter: brightness(1.08) !important;
+  border-color: rgba(167,139,250,.44) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.10),
+    0 0 21px rgba(139,92,246,.48),
+    0 0 34px rgba(124,58,237,.20) !important;
+}
+
+.publish:hover svg,
+.primary:hover svg,
+.ghost:hover svg,
+.icon-btn:hover svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,1))
+    drop-shadow(0 0 22px rgba(124,58,237,.62)) !important;
+}
+
+.publish:active,
+.primary:active,
+.ghost:active,
+.icon-btn:active {
+  animation: none !important;
+  transform: translateY(4px) scale(.90) !important;
+  filter: brightness(1.14) !important;
+  border-color: rgba(167,139,250,.58) !important;
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,.25),
+    0 0 27px rgba(139,92,246,.84),
+    0 0 50px rgba(124,58,237,.44),
+    inset 0 0 16px rgba(139,92,246,.20) !important;
+}
+
+.publish:active svg,
+.primary:active svg,
+.ghost:active svg,
+.icon-btn:active svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 6px rgba(196,181,253,1))
+    drop-shadow(0 0 16px rgba(139,92,246,1))
+    drop-shadow(0 0 30px rgba(124,58,237,.90)) !important;
+}
+
+/* Menu/nav/options: selected state is PURPLE. */
+.nav-item.active,
+.playlist-select.active,
+.playlist-picker-list button[aria-pressed="true"],
+.shuffle-option.active {
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.27), rgba(124,58,237,.13)) !important;
+  border-color: rgba(167,139,250,.46) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.12),
+    0 0 20px rgba(139,92,246,.38) !important;
+}
+
+.nav-item.active svg,
+.playlist-select.active svg,
+.playlist-picker-list button[aria-pressed="true"] svg,
+.shuffle-option.active svg,
+.shuffle-option.active .shuffle-option-icon {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,1)) !important;
+}
+
+/* Shuffle menu hover/press is PURPLE, never pink. */
+.shuffle-option:hover:not(:disabled) {
+  animation: mg-strict-button-hover 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.22), rgba(124,58,237,.10)) !important;
+  border-color: rgba(167,139,250,.42) !important;
+  box-shadow:
+    0 0 20px rgba(139,92,246,.46),
+    0 0 34px rgba(124,58,237,.20) !important;
+}
+
+.shuffle-option:hover:not(:disabled) .shuffle-option-icon,
+.shuffle-option:hover:not(:disabled) .shuffle-option-icon svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,1)) !important;
+}
+
+.shuffle-option:active:not(:disabled) {
+  animation: none !important;
+  transform: translateY(4px) scale(.90) !important;
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.34), rgba(124,58,237,.18)) !important;
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,.25),
+    0 0 27px rgba(139,92,246,.84),
+    0 0 48px rgba(124,58,237,.42) !important;
+}
+
+.shuffle-option:active:not(:disabled) .shuffle-option-icon svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 6px rgba(196,181,253,1))
+    drop-shadow(0 0 16px rgba(139,92,246,1)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):hover,
+  button:not(:disabled):active,
+  .publish:hover,
+  .publish:active,
+  .primary:hover,
+  .primary:active,
+  .ghost:hover,
+  .ghost:active,
+  .icon-btn:hover,
+  .icon-btn:active,
+  .shuffle-option:hover:not(:disabled),
+  .shuffle-option:active:not(:disabled) {
+    animation: none !important;
+    transform: none !important;
   }
 }
 
-/* Phone/fold layouts: preserve the popup inside narrow viewports. */
-@media (max-width: 680px) {
-  .volume-mobile-popover {
-    right: -4px !important;
-    bottom: calc(100% + 9px) !important;
-  }
+/* ========================================================================== */
+/* STRICT GLOBAL BUTTON INTERACTION — AUTHORITATIVE                            */
+/* Hover = lift/bounce. Press = inward shrink. Selected = purple. Like = pink. */
+/* ========================================================================== */
 
-  .player {
-    overflow: visible !important;
-  }
-
-  .player > .player-right {
-    overflow: visible !important;
-  }
-
-  .volume-control {
-    overflow: visible !important;
-  }
+@keyframes strictButtonBounceUp {
+  0%   { transform: translateY(0) scale(1); }
+  35%  { transform: translateY(-7px) scale(1.06); }
+  62%  { transform: translateY(-3px) scale(1.035); }
+  100% { transform: translateY(-5px) scale(1.045); }
 }
 
-/* Small phones: slightly smaller popup, but retain touch targets. */
-@media (max-width: 420px) {
-  .volume-mobile-popover {
-    width: 54px !important;
-    min-height: 168px !important;
-  }
-
-  .volume-mobile-slider {
-    height: 20px !important;
-  }
-
-  .volume-mobile-mute {
-    width: 36px !important;
-    height: 36px !important;
-  }
+button:not(:disabled),
+[role="button"],
+label.ghost,
+label.primary {
+  transform-origin: center center !important;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 160ms cubic-bezier(.22,1.25,.36,1),
+    background 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease,
+    color 160ms ease,
+    filter 160ms ease !important;
 }
 
-/* Foldable / short landscape screens. */
-@media (orientation: landscape) and (max-height: 600px) {
-  .volume-mobile-popover {
-    min-height: 154px !important;
+/* -------------------------------------------------------------------------- */
+/* 1. NORMAL HOVER — ALWAYS PURPLE                                            */
+/* -------------------------------------------------------------------------- */
+
+button:not(:disabled):not(.like-button):hover,
+[role="button"]:not(.like-button):hover,
+label.ghost:hover,
+label.primary:hover {
+  animation: strictButtonBounceUp 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  filter: brightness(1.09) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.14),
+    0 0 20px rgba(139,92,246,.48),
+    0 0 36px rgba(124,58,237,.20) !important;
+}
+
+button:not(:disabled):not(.like-button):hover svg,
+[role="button"]:not(.like-button):hover svg,
+label.ghost:hover svg,
+label.primary:hover svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,1))
+    drop-shadow(0 0 24px rgba(124,58,237,.58)) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2. NORMAL PRESS — INWARD + SHRINK + STRONG PURPLE GLOW                    */
+/* -------------------------------------------------------------------------- */
+
+button:not(:disabled):not(.like-button):active,
+[role="button"]:not(.like-button):active,
+label.ghost:active,
+label.primary:active {
+  animation: none !important;
+  transform: translateY(4px) scale(.88) !important;
+  filter: brightness(1.16) !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.30), rgba(124,58,237,.18)) !important;
+  border-color: rgba(196,181,253,.62) !important;
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,.24),
+    0 0 28px rgba(139,92,246,.86),
+    0 0 52px rgba(124,58,237,.48),
+    inset 0 0 16px rgba(139,92,246,.18) !important;
+}
+
+button:not(:disabled):not(.like-button):active svg,
+[role="button"]:not(.like-button):active svg,
+label.ghost:active svg,
+label.primary:active svg {
+  color: #d7c6ff !important;
+  stroke: #d7c6ff !important;
+  filter:
+    drop-shadow(0 0 5px rgba(215,198,255,1))
+    drop-shadow(0 0 16px rgba(139,92,246,1))
+    drop-shadow(0 0 30px rgba(124,58,237,.88)) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 3. SELECTED / TOGGLED — ALWAYS PURPLE                                     */
+/* -------------------------------------------------------------------------- */
+
+button.control-active,
+button.selected,
+button.active,
+button[data-active="true"],
+button[aria-pressed="true"]:not(.like-button),
+[role="button"].control-active,
+[role="button"][aria-pressed="true"]:not(.like-button) {
+  color: #c8b0ff !important;
+  background: linear-gradient(135deg, rgba(139,92,246,.25), rgba(124,58,237,.12)) !important;
+  border-color: rgba(167,139,250,.46) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.12),
+    0 0 20px rgba(139,92,246,.40) !important;
+}
+
+button.control-active svg,
+button.selected svg,
+button.active svg,
+button[data-active="true"] svg,
+button[aria-pressed="true"]:not(.like-button) svg,
+[role="button"].control-active svg,
+[role="button"][aria-pressed="true"]:not(.like-button) svg {
+  color: #c8b0ff !important;
+  stroke: #c8b0ff !important;
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 12px rgba(139,92,246,.98))
+    drop-shadow(0 0 22px rgba(124,58,237,.58)) !important;
+}
+
+/* Selected controls still obey the same physical hover/press behavior. */
+button.control-active:not(:disabled):hover,
+button.selected:not(:disabled):hover,
+button.active:not(:disabled):hover,
+button[data-active="true"]:not(:disabled):hover,
+button[aria-pressed="true"]:not(.like-button):not(:disabled):hover {
+  animation: strictButtonBounceUp 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  transform: translateY(-5px) scale(1.045) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.18),
+    0 0 24px rgba(139,92,246,.58),
+    0 0 40px rgba(124,58,237,.24) !important;
+}
+
+button.control-active:not(:disabled):active,
+button.selected:not(:disabled):active,
+button.active:not(:disabled):active,
+button[data-active="true"]:not(:disabled):active,
+button[aria-pressed="true"]:not(.like-button):not(:disabled):active {
+  animation: none !important;
+  transform: translateY(4px) scale(.88) !important;
+  box-shadow:
+    0 0 0 2px rgba(167,139,250,.28),
+    0 0 30px rgba(139,92,246,.92),
+    0 0 54px rgba(124,58,237,.52),
+    inset 0 0 17px rgba(139,92,246,.20) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 4. LIKE — THE ONLY PINK CONTROL                                           */
+/* -------------------------------------------------------------------------- */
+
+button.like-button,
+button[aria-label="Like"],
+button[aria-label="Unlike"] {
+  color: #ff70bd !important;
+}
+
+button.like-button:not(:disabled):hover,
+button[aria-label="Like"]:not(:disabled):hover,
+button[aria-label="Unlike"]:not(:disabled):hover {
+  animation: strictButtonBounceUp 360ms cubic-bezier(.22,1.25,.36,1) both !important;
+  transform: translateY(-5px) scale(1.06) !important;
+  filter: brightness(1.10) !important;
+  background: linear-gradient(135deg, rgba(255,105,180,.20), rgba(244,114,182,.10)) !important;
+  border-color: rgba(255,105,180,.52) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,105,180,.16),
+    0 0 22px rgba(255,105,180,.62),
+    0 0 38px rgba(255,105,180,.28) !important;
+}
+
+button.like-button:not(:disabled):hover svg,
+button[aria-label="Like"]:not(:disabled):hover svg,
+button[aria-label="Unlike"]:not(:disabled):hover svg {
+  color: #ff70bd !important;
+  stroke: #ff70bd !important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,105,180,1))
+    drop-shadow(0 0 15px rgba(255,105,180,1))
+    drop-shadow(0 0 28px rgba(255,105,180,.78)) !important;
+}
+
+button.like-button:not(:disabled):active,
+button[aria-label="Like"]:not(:disabled):active,
+button[aria-label="Unlike"]:not(:disabled):active {
+  animation: none !important;
+  transform: translateY(4px) scale(.88) !important;
+  filter: brightness(1.16) !important;
+  background: linear-gradient(135deg, rgba(255,105,180,.34), rgba(244,114,182,.18)) !important;
+  border-color: rgba(255,105,180,.68) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,105,180,.28),
+    0 0 30px rgba(255,105,180,.92),
+    0 0 56px rgba(244,114,182,.54),
+    inset 0 0 17px rgba(255,105,180,.20) !important;
+}
+
+button.like-button:not(:disabled):active svg,
+button[aria-label="Like"]:not(:disabled):active svg,
+button[aria-label="Unlike"]:not(:disabled):active svg {
+  color: #ff70bd !important;
+  stroke: #ff70bd !important;
+  filter:
+    drop-shadow(0 0 6px rgba(255,105,180,1))
+    drop-shadow(0 0 18px rgba(255,105,180,1))
+    drop-shadow(0 0 34px rgba(255,105,180,.90)) !important;
+}
+
+button.like-button.liked,
+button.like-button[data-active="true"],
+button.like-button[aria-pressed="true"] {
+  color: #ff70bd !important;
+  background: linear-gradient(135deg, rgba(255,105,180,.20), rgba(244,114,182,.10)) !important;
+  border-color: rgba(255,105,180,.50) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,105,180,.14),
+    0 0 20px rgba(255,105,180,.42) !important;
+}
+
+button.like-button.liked svg,
+button.like-button[data-active="true"] svg,
+button.like-button[aria-pressed="true"] svg {
+  color: #ff70bd !important;
+  stroke: #ff70bd !important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,105,180,1))
+    drop-shadow(0 0 14px rgba(255,105,180,.98))
+    drop-shadow(0 0 26px rgba(255,105,180,.70)) !important;
+}
+
+/* Import is a label in the existing JSX, so it must be explicitly covered. */
+label.ghost:hover,
+label.primary:hover {
+  color: #c8b0ff !important;
+}
+
+label.ghost:active,
+label.primary:active {
+  color: #d7c6ff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  [role="button"],
+  label.ghost,
+  label.primary {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  button:hover,
+  button:active,
+  [role="button"]:hover,
+  [role="button"]:active,
+  label.ghost:hover,
+  label.ghost:active,
+  label.primary:hover,
+  label.primary:active {
+    transform: none !important;
   }
 }
