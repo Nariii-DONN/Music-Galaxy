@@ -116,6 +116,10 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+.search input:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background:
     rgba(
@@ -338,7 +342,6 @@ input:focus-visible {
     0;
 
   border-radius: 12px;
-
   background: transparent;
 
   color: #85899b;
@@ -442,8 +445,14 @@ input:focus-visible {
       460px,
       42vw
     );
-
+  
   z-index: 100;
+}
+
+.search-wrapper.expanded-player-search {
+  position: relative;
+  left: -200px;
+  top: 41px;
 }
 
 .search {
@@ -485,6 +494,28 @@ input:focus-visible {
     );
 
   color: #666b7d;
+  transform-origin: center;
+  transition:
+    transform 180ms cubic-bezier(.22, 1.25, .36, 1),
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.search:hover {
+  transform: translateY(-3px) scale(1.015);
+
+  border-color:
+    rgba(
+      157,
+      124,
+      255,
+      0.42
+    );
+
+  box-shadow:
+    0 0 12px rgba(139, 92, 246, 0.35),
+    0 0 28px rgba(139, 92, 246, 0.18);
 }
 
 .search.is-open {
@@ -512,6 +543,32 @@ input:focus-visible {
     auto;
 
   color: #666b7d;
+  transition:
+    color 180ms ease,
+    filter 180ms ease,
+    transform 180ms cubic-bezier(.22, 1.25, .36, 1);
+}
+
+.search:focus-within > svg {
+  color: #c8b0ff;
+
+  filter:
+    drop-shadow(0 0 4px rgba(196, 181, 253, 1))
+    drop-shadow(0 0 10px rgba(139, 92, 246, 0.95))
+    drop-shadow(0 0 18px rgba(124, 58, 237, 0.55));
+
+  transform: scale(1.12);
+}
+
+.search:hover > svg {
+  color: #c8b0ff;
+
+  filter:
+    drop-shadow(0 0 4px rgba(196,181,253,1))
+    drop-shadow(0 0 10px rgba(139,92,246,.95))
+    drop-shadow(0 0 18px rgba(124,58,237,.55));
+
+  transform: scale(1.12);
 }
 
 .search input {
@@ -2874,13 +2931,10 @@ input:focus-visible {
 
 .playlist-picker-list {
   display: grid;
-
   gap: 6px;
-
   max-height: 320px;
-
   overflow-y: auto;
-
+  overflow-x: hidden;
   scrollbar-width: thin;
 }
 
@@ -4192,7 +4246,7 @@ input:focus-visible {
 
 .player-left .player-controls > button:not(.play):hover {
   background: rgba(255,255,255,.07) !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-5px) !important;
 }
 
 .player-left .player-controls > button.control-active,
@@ -5203,11 +5257,24 @@ input:focus-visible {
   padding: 0;
 
   border: 1px solid transparent;
-  border: 2px solid rgba(196,181,253,.85) !important;
   border-radius: 10px;
 
   background: transparent;
   color: rgba(255,255,255,.72);
+}
+
+.player-expanded .extended-volume-control > .volume-button[aria-pressed="true"] {
+  color: #c8b0ff !important;
+  background: linear-gradient(
+    135deg,
+    rgba(139,92,246,.25),
+    rgba(124,58,237,.10)
+  ) !important;
+  border: 2px solid rgba(196,181,253,.95) !important;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.18),
+    0 0 20px rgba(139,92,246,.42),
+    0 0 32px rgba(124,58,237,.24) !important;
 }
 
 .player-expanded .extended-volume-control > .volume-button svg {
@@ -5486,7 +5553,7 @@ input:focus-visible {
   top: auto !important;
   right: auto !important;
 
-  width: var(--shuffle-width) !important;
+  width: 180px;
   max-width: calc(100vw - 20px) !important;
 
   padding: 7px !important;

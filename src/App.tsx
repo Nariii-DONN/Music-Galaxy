@@ -55,6 +55,8 @@ import {
   Trash2,
   Pencil,
   Check,
+  CarFront,
+  Rocket,
 } from 'lucide-react'
 
 import type { Track } from './lib/types'
@@ -1560,7 +1562,7 @@ export default function App() {
         {[
             'Trending',
             'Night Drive',
-            'Focus',
+            'For You',
             'New Releases',
         ].map((item) => (<button className="nav-item subtle" key={item} onClick={() => {
                 setQuery(item ===
@@ -1573,7 +1575,21 @@ export default function App() {
                 setMenu(false);
             }}>
 
-              <Radio size={16}/>
+              {item === 'Trending' && (
+                <Radio size={16} />
+              )}
+              
+              {item === 'Night Drive' && (
+                <CarFront size={16} />
+              )}
+              
+              {item === 'For You' && (
+                <Heart size={16} />
+              )}
+              
+              {item === 'New Releases' && (
+                <Rocket size={16} />
+              )}
 
               <span>
                 {item}
@@ -1621,7 +1637,7 @@ export default function App() {
 
           </button>
 
-          <div ref={searchAreaRef} className="search-wrapper">
+          <div ref={searchAreaRef} className={`search-wrapper ${showPlayer ? 'expanded-player-search' : ''}`}>
 
             <div className={searchOpen
             ? 'search is-open'
@@ -3149,8 +3165,8 @@ export default function App() {
                 </button>
 
               </div>
-
-              {playlists.length ? (<div className="playlist-picker-list">
+                
+                {playlists.length ? (<div className="playlist-picker-list">
 
                   {playlists.map((playlist) => (<button key={playlist.id} onClick={() => void addToPlaylist(playlist.id, addMenuTrack)} aria-pressed={playlist.trackIds.includes(addMenuTrack.id)} aria-label={playlist.trackIds.includes(addMenuTrack.id)
                         ? `Remove from ${playlist.name}`
